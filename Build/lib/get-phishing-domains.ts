@@ -1,6 +1,5 @@
 import { getGorhillPublicSuffixPromise } from './get-gorhill-publicsuffix';
-import { processDomainLists, processHosts } from './parse-filter';
-import { traceAsync, traceSync } from './trace-runner';
+import { processDomainLists } from './parse-filter';
 import * as tldts from 'tldts';
 import { createTrie } from './trie';
 import { createCachedGorhillGetDomain } from './cached-tld-parse';
@@ -99,18 +98,19 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
     SetAdd(domainSet, domainSet2);
   }
 
-  span.traceChild('whitelisting phishing domains').traceSyncFn(() => {
-    const trieForRemovingWhiteListed = createTrie(domainSet);
+  span.traceChild('whitelisting phishing domains').traceSyncFn((parentSpan) => {
+    const trieForRemovingWhiteListed = parentSpan.traceChild('create trie for whitelisting').traceSyncFn(() => createTrie(domainSet));
 
-    const needToBeWhite = WHITELIST_DOMAIN.flatMap(white => {
-      const found = trieForRemovingWhiteListed.find(`.${white}`, true);
-      found.push(white);
-      return found;
+    return parentSpan.traceChild('delete whitelisted from domainset').traceSyncFn(() => {
+      for (let i = 0, len = WHITELIST_DOMAIN.length; i < len; i++) {
+        const white = WHITELIST_DOMAIN[i];
+        const found = trieForRemovingWhiteListed.find(`.${white}`, true);
+        for (let j = 0, len2 = found.length; j < len2; j++) {
+          domainSet.delete(found[j]);
+        }
+        domainSet.delete(white);
+      }
     });
-
-    for (let i = 0, len = needToBeWhite.length; i < len; i++) {
-      domainSet.delete(needToBeWhite[i]);
-    }
   });
 
   const domainCountMap: Record<string, number> = {};
@@ -149,6 +149,7 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
       const tld = gorhill.getPublicSuffix(line[0] === '.' ? line.slice(1) : line);
       if (!tld || !BLACK_TLD.has(tld)) continue;
 
+      // Only when tld is black will this 1 weight be added
       domainCountMap[apexDomain] += 1;
 
       const lineLen = line.length;
@@ -177,9 +178,15 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
     }
   });
 
-  const results = span.traceChild('get final phishing results').traceSyncFn(() => Object.entries(domainCountMap)
-    .filter(([, count]) => count >= 5)
-    .map(([apexDomain]) => apexDomain));
+  const results = span.traceChild('get final phishing results').traceSyncFn(() => {
+    const results: string[] = [];
+    for (const domain in domainCountMap) {
+      if (domainCountMap[domain] >= 5) {
+        results.push(`.${domain}`);
+      }
+    }
+    return results;
+  });
 
   return [results, domainSet] as const;
 });
