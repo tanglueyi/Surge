@@ -2,6 +2,8 @@
  * Suffix Trie based on Mnemonist Trie
  */
 
+import { Trie } from 'mnemonist';
+
 export const SENTINEL = Symbol('SENTINEL');
 
 type TrieNode = {
@@ -9,8 +11,7 @@ type TrieNode = {
 } & Map<string, TrieNode>;
 
 const createNode = (): TrieNode => {
-  const map = new Map<string, TrieNode>();
-  const node = map as TrieNode;
+  const node = new Map<string, TrieNode>() as TrieNode;
   node[SENTINEL] = false;
   return node;
 };
@@ -65,7 +66,7 @@ export const createTrie = (from?: string[] | Set<string>) => {
   /**
    * Method used to retrieve every item in the trie with the given prefix.
    */
-  const find = (inputSuffix: string, /** @default true */ includeEqualWithSuffix = true): string[] => {
+  const find = (inputSuffix: string, /** @default false */ includeEqualWithSuffix = false): string[] => {
     let node: TrieNode | undefined = root;
     let token: string;
 
@@ -101,6 +102,43 @@ export const createTrie = (from?: string[] | Set<string>) => {
     }
 
     return matches;
+  };
+
+  /**
+   * Works like trie.find, but instead of returning the matches as an array, it removes them from the given set in-place.
+   */
+  const substractSetInPlaceFromFound = (inputSuffix: string, set: Set<string>) => {
+    let node: TrieNode | undefined = root;
+    let token: string;
+
+    for (let i = inputSuffix.length - 1; i >= 0; i--) {
+      token = inputSuffix[i];
+
+      node = node.get(token);
+      if (!node) {
+        return [];
+      }
+    }
+
+    // Performing DFS from prefix
+    const nodeStack: TrieNode[] = [node];
+    const suffixStack: string[] = [inputSuffix];
+
+    while (nodeStack.length) {
+      const suffix = suffixStack.pop()!;
+      node = nodeStack.pop()!;
+
+      if (node[SENTINEL]) {
+        if (suffix !== inputSuffix) {
+          set.delete(suffix);
+        }
+      }
+
+      node.forEach((childNode, k) => {
+        nodeStack.push(childNode);
+        suffixStack.push(k + suffix);
+      });
+    }
   };
 
   /**
@@ -173,13 +211,50 @@ export const createTrie = (from?: string[] | Set<string>) => {
     from.forEach(add);
   }
 
+  const dump = () => {
+    const node = root;
+    const nodeStack: TrieNode[] = [];
+    const suffixStack: string[] = [];
+    // Resolving initial string
+    const suffix = '';
+
+    nodeStack.push(node);
+    suffixStack.push(suffix);
+
+    const results: string[] = [];
+
+    let currentNode: TrieNode;
+    let currentPrefix: string;
+    let hasValue = false;
+
+    while (nodeStack.length) {
+      currentNode = nodeStack.pop()!;
+      currentPrefix = suffixStack.pop()!;
+
+      if (currentNode[SENTINEL]) {
+        hasValue = true;
+      }
+
+      node.forEach((childNode, k) => {
+        nodeStack.push(childNode);
+        suffixStack.push(k + suffix);
+      });
+
+      if (hasValue) results.push(currentPrefix);
+    }
+
+    return results;
+  };
+
   return {
     add,
     contains,
     find,
+    substractSetInPlaceFromFound,
     remove,
     delete: remove,
     has,
+    dump,
     get size() {
       return size;
     },
