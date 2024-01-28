@@ -8,14 +8,15 @@ import type { PublicSuffixList } from '@gorhill/publicsuffixlist';
 import picocolors from 'picocolors';
 import { normalizeDomain } from './normalize-domain';
 import { fetchAssets } from './fetch-assets';
-import { deserializeSet, fsCache, serializeSet } from './cache-filesystem';
+import { deserializeSet, fsFetchCache, serializeSet } from './cache-filesystem';
 import type { Span } from '../trace';
 
 const DEBUG_DOMAIN_TO_FIND: string | null = null; // example.com | null
 let foundDebugDomain = false;
+const temporaryBypass = DEBUG_DOMAIN_TO_FIND !== null;
 
 export function processDomainLists(span: Span, domainListsUrl: string, includeAllSubDomain = false, ttl: number | null = null) {
-  return span.traceChild(`process domainlist: ${domainListsUrl}`).traceAsyncFn(() => fsCache.apply(
+  return span.traceChild(`process domainlist: ${domainListsUrl}`).traceAsyncFn(() => fsFetchCache.apply(
     domainListsUrl,
     async () => {
       const domainSets = new Set<string>();
@@ -38,14 +39,14 @@ export function processDomainLists(span: Span, domainListsUrl: string, includeAl
     },
     {
       ttl,
-      temporaryBypass: DEBUG_DOMAIN_TO_FIND !== null,
+      temporaryBypass,
       serializer: serializeSet,
       deserializer: deserializeSet
     }
   ));
 }
 export function processHosts(span: Span, hostsUrl: string, mirrors: string[] | null, includeAllSubDomain = false, ttl: number | null = null) {
-  return span.traceChild(`processhosts: ${hostsUrl}`).traceAsyncFn((childSpan) => fsCache.apply(
+  return span.traceChild(`processhosts: ${hostsUrl}`).traceAsyncFn((childSpan) => fsFetchCache.apply(
     hostsUrl,
     async () => {
       const domainSets = new Set<string>();
@@ -97,7 +98,7 @@ export function processHosts(span: Span, hostsUrl: string, mirrors: string[] | n
     },
     {
       ttl,
-      temporaryBypass: DEBUG_DOMAIN_TO_FIND !== null,
+      temporaryBypass,
       serializer: serializeSet,
       deserializer: deserializeSet
     }
@@ -119,7 +120,7 @@ export async function processFilterRules(
   fallbackUrls?: readonly string[] | undefined | null,
   ttl: number | null = null
 ): Promise<{ white: string[], black: string[], foundDebugDomain: boolean }> {
-  const [white, black, warningMessages] = await parentSpan.traceChild(`process filter rules: ${filterRulesUrl}`).traceAsyncFn((span) => fsCache.apply<Readonly<[
+  const [white, black, warningMessages] = await parentSpan.traceChild(`process filter rules: ${filterRulesUrl}`).traceAsyncFn((span) => fsFetchCache.apply<Readonly<[
     white: string[],
     black: string[],
     warningMessages: string[]
@@ -131,7 +132,11 @@ export async function processFilterRules(
 
       const warningMessages: string[] = [];
 
-      const gorhill = await getGorhillPublicSuffixPromise();
+      const gorhillPromise = getGorhillPublicSuffixPromise();
+      const peekedGorhill = Bun.peek(gorhillPromise);
+      const gorhill = peekedGorhill === gorhillPromise
+        ? await span.traceChild('get gorhill').tracePromise(gorhillPromise)
+        : (peekedGorhill as PublicSuffixList);
 
       /**
      * @param {string} line
@@ -187,7 +192,6 @@ export async function processFilterRules(
         }
       };
 
-      // TODO-SUKKA: add cache here
       if (!fallbackUrls || fallbackUrls.length === 0) {
         for await (const line of await fetchRemoteTextByLine(filterRulesUrl)) {
           // don't trim here
@@ -216,7 +220,7 @@ export async function processFilterRules(
     },
     {
       ttl,
-      temporaryBypass: DEBUG_DOMAIN_TO_FIND !== null,
+      temporaryBypass,
       serializer: JSON.stringify,
       deserializer: JSON.parse
     }

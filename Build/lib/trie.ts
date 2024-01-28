@@ -2,21 +2,34 @@
  * Suffix Trie based on Mnemonist Trie
  */
 
-import { Trie } from 'mnemonist';
+// import { Trie } from 'mnemonist';
 
 export const SENTINEL = Symbol('SENTINEL');
 
 type TrieNode = {
-  [SENTINEL]: boolean
+  [SENTINEL]: boolean,
+  [Bun.inspect.custom]: () => string
 } & Map<string, TrieNode>;
+
+const deepTrieNodeToJSON = (node: TrieNode) => {
+  const obj: Record<string, any> = {};
+  if (node[SENTINEL]) {
+    obj['[start]'] = node[SENTINEL];
+  }
+  node.forEach((value, key) => {
+    obj[key] = deepTrieNodeToJSON(value);
+  });
+  return obj;
+};
 
 const createNode = (): TrieNode => {
   const node = new Map<string, TrieNode>() as TrieNode;
   node[SENTINEL] = false;
+  node[Bun.inspect.custom] = () => JSON.stringify(deepTrieNodeToJSON(node), null, 2);
   return node;
 };
 
-export const createTrie = (from?: string[] | Set<string>) => {
+export const createTrie = (from?: string[] | Set<string> | null) => {
   let size = 0;
   const root: TrieNode = createNode();
 
@@ -26,6 +39,7 @@ export const createTrie = (from?: string[] | Set<string>) => {
   const add = (suffix: string): void => {
     let node: TrieNode = root;
     let token: string;
+
     for (let i = suffix.length - 1; i >= 0; i--) {
       token = suffix[i];
 
@@ -41,8 +55,8 @@ export const createTrie = (from?: string[] | Set<string>) => {
     // Do we need to increase size?
     if (!node[SENTINEL]) {
       size++;
-      node[SENTINEL] = true;
     }
+    node[SENTINEL] = true;
   };
 
   /**
@@ -66,7 +80,7 @@ export const createTrie = (from?: string[] | Set<string>) => {
   /**
    * Method used to retrieve every item in the trie with the given prefix.
    */
-  const find = (inputSuffix: string, /** @default false */ includeEqualWithSuffix = false): string[] => {
+  const find = (inputSuffix: string, /** @default true */ includeEqualWithSuffix = true): string[] => {
     let node: TrieNode | undefined = root;
     let token: string;
 
@@ -85,8 +99,8 @@ export const createTrie = (from?: string[] | Set<string>) => {
     const nodeStack: TrieNode[] = [node];
     const suffixStack: string[] = [inputSuffix];
 
-    while (nodeStack.length) {
-      const suffix = suffixStack.pop()!;
+    do {
+      const suffix: string = suffixStack.pop()!;
       node = nodeStack.pop()!;
 
       if (node[SENTINEL]) {
@@ -99,7 +113,7 @@ export const createTrie = (from?: string[] | Set<string>) => {
         nodeStack.push(childNode);
         suffixStack.push(k + suffix);
       });
-    }
+    } while (nodeStack.length);
 
     return matches;
   };
@@ -111,12 +125,13 @@ export const createTrie = (from?: string[] | Set<string>) => {
     let node: TrieNode | undefined = root;
     let token: string;
 
+    // Find the leaf-est node, and early return if not any
     for (let i = inputSuffix.length - 1; i >= 0; i--) {
       token = inputSuffix[i];
 
       node = node.get(token);
       if (!node) {
-        return [];
+        return;
       }
     }
 
@@ -124,12 +139,13 @@ export const createTrie = (from?: string[] | Set<string>) => {
     const nodeStack: TrieNode[] = [node];
     const suffixStack: string[] = [inputSuffix];
 
-    while (nodeStack.length) {
+    do {
       const suffix = suffixStack.pop()!;
       node = nodeStack.pop()!;
 
       if (node[SENTINEL]) {
         if (suffix !== inputSuffix) {
+          // found match, delete it from set
           set.delete(suffix);
         }
       }
@@ -138,7 +154,7 @@ export const createTrie = (from?: string[] | Set<string>) => {
         nodeStack.push(childNode);
         suffixStack.push(k + suffix);
       });
-    }
+    } while (nodeStack.length);
   };
 
   /**
@@ -207,7 +223,11 @@ export const createTrie = (from?: string[] | Set<string>) => {
     return node[SENTINEL];
   };
 
-  if (from) {
+  if (Array.isArray(from)) {
+    for (let i = 0, l = from.length; i < l; i++) {
+      add(from[i]);
+    }
+  } else if (from) {
     from.forEach(add);
   }
 
@@ -227,7 +247,7 @@ export const createTrie = (from?: string[] | Set<string>) => {
     let currentPrefix: string;
     let hasValue = false;
 
-    while (nodeStack.length) {
+    do {
       currentNode = nodeStack.pop()!;
       currentPrefix = suffixStack.pop()!;
 
@@ -241,7 +261,7 @@ export const createTrie = (from?: string[] | Set<string>) => {
       });
 
       if (hasValue) results.push(currentPrefix);
-    }
+    } while (nodeStack.length);
 
     return results;
   };
@@ -260,7 +280,8 @@ export const createTrie = (from?: string[] | Set<string>) => {
     },
     get root() {
       return root;
-    }
+    },
+    [Bun.inspect.custom]: () => JSON.stringify(deepTrieNodeToJSON(root), null, 2)
   };
 };
 
