@@ -99,7 +99,12 @@ export const createRuleset = (
   title: string, description: string[] | readonly string[], date: Date, content: string[],
   type: 'ruleset' | 'domainset', surgePath: string, clashPath: string
 ) => parentSpan.traceChild(`create ruleset: ${path.basename(surgePath, path.extname(surgePath))}`).traceAsyncFn((childSpan) => {
-  const surgeContent = withBannerArray(title, description, date, [MARK, ...content]);
+  const surgeContent = withBannerArray(
+    title, description, date,
+    type === 'domainset'
+      ? [MARK, ...content]
+      : [`DOMAIN,${MARK}`, ...content]
+  );
   const clashContent = childSpan.traceChildSync('convert incoming ruleset to clash', () => {
     let _clashContent;
     switch (type) {
