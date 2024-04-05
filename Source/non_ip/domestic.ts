@@ -7,6 +7,7 @@ export const DOMESTICS = {
       'ucweb.com',
       'alibaba.com',
       'alicdn.com',
+      'ialicdn.com',
       'alidns.com',
       'aliimg.com',
       'aliyun.com',
@@ -70,7 +71,9 @@ export const DOMESTICS = {
       'npmmirror.com',
       'alios.cn',
       'wandoujia.com',
-      'aliapp.org'
+      'aliapp.org',
+      'tanx.com',
+      'hellobike.com'
     ]
   },
   TENCENT: {
@@ -121,7 +124,10 @@ export const DOMESTICS = {
       'yunos.com',
       'yitao.com',
       'anticheatexpert.com',
-      'url.cn'
+      'url.cn',
+      'qlivecdn.com',
+      'tcdnlive.com',
+      'dnsv1.com'
     ]
   },
   BILIBILI_ALI: {
@@ -212,7 +218,8 @@ export const DOMESTICS = {
       'ixgvideo.com',
       'volccdn.com',
       'byted-static.com',
-      'volces.com'
+      'volces.com',
+      'baike.com'
     ]
   },
   BAIDU: {
@@ -269,12 +276,15 @@ export const DOMESTICS = {
       '360.net',
       '360safe.com',
       '360tpcdn.com',
+      '360os.com',
       '360webcache.com',
+      '360kuai.com',
       'so.com',
       'haosou.com',
       'yunpan.cn',
       'yunpan.com',
-      'yunpan.com.cn'
+      'yunpan.com.cn',
+      'qh-cdn.com'
     ]
   },
   SYSTEM: {

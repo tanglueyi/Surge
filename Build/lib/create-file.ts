@@ -18,6 +18,9 @@ export async function compareAndWriteFile(span: Span, linesA: string[], filePath
     console.log(`Nothing to write to ${filePath}...`);
     isEqual = false;
   } else {
+    /* The `isEqual` variable is used to determine whether the content of a file is equal to the
+    provided lines or not. It is initially set to `true`, and then it is updated based on different
+    conditions: */
     isEqual = await span.traceChildAsync(`comparing ${filePath}`, async () => {
       let index = 0;
 
@@ -64,18 +67,17 @@ export async function compareAndWriteFile(span: Span, linesA: string[], filePath
   }
 
   await span.traceChildAsync(`writing ${filePath}`, async () => {
-    if (linesALen < 10000) {
-      return Bun.write(file, `${linesA.join('\n')}\n`);
-    }
+    // if (linesALen < 10000) {
+    return Bun.write(file, `${linesA.join('\n')}\n`);
+    // }
+    // const writer = file.writer();
 
-    const writer = file.writer();
+    // for (let i = 0; i < linesALen; i++) {
+    //   writer.write(linesA[i]);
+    //   writer.write('\n');
+    // }
 
-    for (let i = 0; i < linesALen; i++) {
-      writer.write(linesA[i]);
-      writer.write('\n');
-    }
-
-    return writer.end();
+    // return writer.end();
   });
 }
 
@@ -92,6 +94,39 @@ export const withBannerArray = (title: string, description: string[] | readonly 
   ];
 };
 
+const collectType = (rule: string) => {
+  let buf = '';
+  for (let i = 0, len = rule.length; i < len; i++) {
+    if (rule[i] === ',') {
+      return buf;
+    }
+    buf += rule[i];
+  }
+  return null;
+};
+
+const defaultSortTypeOrder = Symbol('defaultSortTypeOrder');
+const sortTypeOrder: Record<string | typeof defaultSortTypeOrder, number> = {
+  DOMAIN: 1,
+  'DOMAIN-SUFFIX': 2,
+  'DOMAIN-KEYWORD': 10,
+  'USER-AGENT': 30,
+  'PROCESS-NAME': 40,
+  [defaultSortTypeOrder]: 50, // default sort order for unknown type
+  AND: 100,
+  OR: 100,
+  'IP-CIDR': 200,
+  'IP-CIDR6': 200
+};
+// sort DOMAIN-SUFFIX and DOMAIN first, then DOMAIN-KEYWORD, then IP-CIDR and IP-CIDR6 if any
+export const sortRuleSet = (ruleSet: string[]) => ruleSet
+  .map((rule) => {
+    const type = collectType(rule);
+    return [type ? (type in sortTypeOrder ? sortTypeOrder[type] : sortTypeOrder[defaultSortTypeOrder]) : 10, rule] as const;
+  })
+  .sort((a, b) => a[0] - b[0])
+  .map(c => c[1]);
+
 const MARK = 'this_ruleset_is_made_by_sukkaw.ruleset.skk.moe';
 
 export const createRuleset = (
@@ -101,9 +136,9 @@ export const createRuleset = (
 ) => parentSpan.traceChild(`create ruleset: ${path.basename(surgePath, path.extname(surgePath))}`).traceAsyncFn((childSpan) => {
   const surgeContent = withBannerArray(
     title, description, date,
-    type === 'domainset'
+    sortRuleSet(type === 'domainset'
       ? [MARK, ...content]
-      : [`DOMAIN,${MARK}`, ...content]
+      : [`DOMAIN,${MARK}`, ...content])
   );
   const clashContent = childSpan.traceChildSync('convert incoming ruleset to clash', () => {
     let _clashContent;
