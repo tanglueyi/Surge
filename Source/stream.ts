@@ -666,6 +666,7 @@ const TIKTOK: StreamService = {
     'DOMAIN-SUFFIX,musical.ly',
     'DOMAIN-SUFFIX,tiktok.com',
     'DOMAIN-SUFFIX,tiktok.us',
+    'DOMAIN-SUFFIX,tiktokv.us',
     'DOMAIN-SUFFIX,tik-tokapi.com',
     // 'DOMAIN-SUFFIX,tiktokcdn.com', // We confirm that tiktokcdn DOES NOT have ANY geoblock
     'DOMAIN-SUFFIX,tiktokv.com',
