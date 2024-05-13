@@ -79,6 +79,8 @@ describe('Trie', () => {
     trie.add('sesqueroman');
     trie.add('greek');
 
+    console.log({ trie });
+
     expect(trie.find('roman')).toEqual(['roman', 'esqueroman', 'sesqueroman']);
     expect(trie.find('man')).toEqual(['roman', 'esqueroman', 'sesqueroman']);
     expect(trie.find('esqueroman')).toEqual(['esqueroman', 'sesqueroman']);
@@ -97,16 +99,21 @@ describe('Trie', () => {
   });
 });
 
-describe('surge domainset dedupe', () => {
+describe.each([
+  ['hostname mode off', false],
+  ['hostname mode on', true]
+])('surge domainset dedupe %s', (_, hostnameMode) => {
   it('should not remove same entry', () => {
-    const trie = createTrie(['.skk.moe', 'noc.one']);
+    const trie = createTrie(['.skk.moe', 'noc.one'], hostnameMode);
+
+    console.log(trie);
 
     expect(trie.find('.skk.moe')).toStrictEqual(['.skk.moe']);
     expect(trie.find('noc.one')).toStrictEqual(['noc.one']);
   });
 
-  it('should remove subdomain', () => {
-    const trie = createTrie(['www.noc.one', 'www.sukkaw.com', 'blog.skk.moe', 'image.cdn.skk.moe', 'cdn.sukkaw.net']);
+  it('should match subdomain - 1', () => {
+    const trie = createTrie(['www.noc.one', 'www.sukkaw.com', 'blog.skk.moe', 'image.cdn.skk.moe', 'cdn.sukkaw.net'], hostnameMode);
 
     console.log(trie);
 
@@ -114,8 +121,80 @@ describe('surge domainset dedupe', () => {
     expect(trie.find('.sukkaw.com')).toStrictEqual(['www.sukkaw.com']);
   });
 
+  it('should match subdomain - 2', () => {
+    const trie = createTrie(['www.noc.one', 'www.sukkaw.com', '.skk.moe', 'blog.skk.moe', 'image.cdn.skk.moe', 'cdn.sukkaw.net'], hostnameMode);
+
+    console.log(trie);
+
+    expect(trie.find('.skk.moe')).toStrictEqual(['.skk.moe', 'image.cdn.skk.moe', 'blog.skk.moe']);
+    expect(trie.find('.sukkaw.com')).toStrictEqual(['www.sukkaw.com']);
+  });
+
   it('should not remove non-subdomain', () => {
-    const trie = createTrie(['skk.moe', 'sukkaskk.moe']);
+    const trie = createTrie(['skk.moe', 'sukkaskk.moe'], hostnameMode);
     expect(trie.find('.skk.moe')).toStrictEqual([]);
+  });
+});
+
+describe('smol tree', () => {
+  it('should create simple tree - 1', () => {
+    const trie = createTrie([
+      '.skk.moe', 'blog.skk.moe', '.cdn.skk.moe', 'skk.moe',
+      'www.noc.one', 'cdn.noc.one',
+      '.blog.sub.example.com', 'sub.example.com', 'cdn.sub.example.com', '.sub.example.com'
+    ], true, true);
+
+    console.log(trie);
+
+    expect(trie.dump()).toStrictEqual([
+      '.sub.example.com',
+      'cdn.noc.one', 'www.noc.one',
+      '.skk.moe'
+    ]);
+  });
+
+  it.only('should create simple tree - 2', () => {
+    const trie = createTrie([
+      '.skk.moe', 'blog.skk.moe', '.cdn.skk.moe', 'skk.moe'
+    ], true, true);
+
+    console.log({ trie });
+
+    expect(trie.dump()).toStrictEqual([
+      '.skk.moe'
+    ]);
+  });
+
+  it('should create simple tree - 2', () => {
+    const trie = createTrie([
+      '.blog.sub.example.com', 'cdn.sub.example.com', '.sub.example.com'
+    ], true, true);
+
+    console.log(trie);
+
+    expect(trie.dump()).toStrictEqual([
+      '.sub.example.com'
+    ]);
+
+    trie.add('.sub.example.com');
+    expect(trie.dump()).toStrictEqual([
+      '.sub.example.com'
+    ]);
+  });
+
+  it('should create simple tree - 3', () => {
+    const trie = createTrie([
+      'commercial.shouji.360.cn',
+      'act.commercial.shouji.360.cn',
+      'cdn.creative.medialytics.com',
+      'px.cdn.creative.medialytics.com'
+    ], true, true);
+
+    expect(trie.dump()).toStrictEqual([
+      'cdn.creative.medialytics.com',
+      'px.cdn.creative.medialytics.com',
+      'commercial.shouji.360.cn',
+      'act.commercial.shouji.360.cn'
+    ]);
   });
 });

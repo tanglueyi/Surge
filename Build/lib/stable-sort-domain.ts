@@ -1,51 +1,37 @@
-import type { PublicSuffixList } from '@gorhill/publicsuffixlist';
-import { sort } from 'timsort';
+import * as tldts from 'tldts';
+import { sort } from './timsort';
 
-const compare = (a: string, b: string) => {
+export const compare = (a: string, b: string) => {
   if (a === b) return 0;
 
   const aLen = a.length;
   const r = aLen - b.length;
-  if (r > 0) {
-    return 1;
-  }
-  if (r < 0) {
-    return -1;
-  }
+  if (r !== 0) return r;
 
-  for (let i = 0; i < aLen; i++) {
-    // if (b[i] == null) {
-    //   return 1;
-    // }
-    if (a[i] < b[i]) {
-      return -1;
-    }
-    if (a[i] > b[i]) {
-      return 1;
-    }
-  }
-  return 0;
+  return a.localeCompare(b);
 };
 
-export const sortDomains = (inputs: string[], gorhill: PublicSuffixList) => {
-  const domains = inputs.reduce<Map<string, string | null>>((acc, cur) => {
-    if (!acc.has(cur)) {
-      const topD = gorhill.getDomain(cur[0] === '.' ? cur.slice(1) : cur);
-      acc.set(cur, topD === cur ? null : topD);
+const tldtsOpt = { allowPrivateDomains: false, detectIp: false, validateHostname: false };
+
+export const sortDomains = (inputs: string[]) => {
+  const domains = inputs.reduce<Map<string, string>>((domains, cur) => {
+    if (!domains.has(cur)) {
+      const topD = tldts.getDomain(cur, tldtsOpt);
+      domains.set(cur, topD ?? cur);
     };
-    return acc;
+    return domains;
   }, new Map());
 
   const sorter = (a: string, b: string) => {
     if (a === b) return 0;
 
-    const $a = domains.get(a);
-    const $b = domains.get(b);
+    const $a = domains.get(a)!;
+    const $b = domains.get(b)!;
 
-    if ($a && $b) {
-      return compare($a, $b) || compare(a, b);
+    if (a === $a && b === $b) {
+      return compare(a, b);
     }
-    return compare(a, b);
+    return $a.localeCompare($b) || compare(a, b);
   };
 
   sort(inputs, sorter);

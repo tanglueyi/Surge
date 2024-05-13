@@ -18,10 +18,9 @@ import { getPhishingDomains } from './lib/get-phishing-domains';
 
 import * as SetHelpers from 'mnemonist/set';
 import { setAddFromArray } from './lib/set-add-from-array';
+import { sort } from './lib/timsort';
 
 export const buildRejectDomainSet = task(import.meta.path, async (span) => {
-  const gorhill = await getGorhillPublicSuffixPromise();
-
   /** Whitelists */
   const filterRuleWhitelistDomainSets = new Set(PREDEFINED_WHITELIST);
 
@@ -155,7 +154,7 @@ export const buildRejectDomainSet = task(import.meta.path, async (span) => {
         return acc;
       }, new Map());
 
-      return Array.from(statMap.entries()).filter(a => a[1] > 9).sort((a, b) => (b[1] - a[1]));
+      return sort(Array.from(statMap.entries()).filter(a => a[1] > 9), (a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]));
     });
 
   const description = [
@@ -177,7 +176,7 @@ export const buildRejectDomainSet = task(import.meta.path, async (span) => {
       'Sukka\'s Ruleset - Reject Base',
       description,
       new Date(),
-      span.traceChildSync('sort reject domainset', () => sortDomains(dudupedDominArray, gorhill)),
+      span.traceChildSync('sort reject domainset', () => sortDomains(dudupedDominArray)),
       'domainset',
       path.resolve(import.meta.dir, '../List/domainset/reject.conf'),
       path.resolve(import.meta.dir, '../Clash/domainset/reject.txt')

@@ -158,6 +158,8 @@ export const buildSpeedtestDomainSet = task(import.meta.path, async (span) => {
     '.speedtest.aarnet.net.au',
     '.ookla.rcp.net',
     '.ookla-speedtests.e2ro.com',
+    '.speedtest.com.sg',
+    '.ookla.ddnsgeek.com',
     // Cloudflare
     '.speed.cloudflare.com',
     // Wi-Fi Man
@@ -243,8 +245,7 @@ export const buildSpeedtestDomainSet = task(import.meta.path, async (span) => {
     });
   });
 
-  const gorhill = await getGorhillPublicSuffixPromise();
-  const deduped = span.traceChildSync('sort result', () => sortDomains(domainDeduper(Array.from(domains)), gorhill));
+  const deduped = span.traceChildSync('sort result', () => sortDomains(domainDeduper(Array.from(domains))));
 
   const description = [
     ...SHARED_DESCRIPTION,
