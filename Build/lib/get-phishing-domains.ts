@@ -1,22 +1,11 @@
 import { getGorhillPublicSuffixPromise } from './get-gorhill-publicsuffix';
 import { processDomainLists } from './parse-filter';
-import * as tldts from 'tldts';
-import { createTrie } from './trie';
+import { getSubdomain } from 'tldts';
 import { TTL } from './cache-filesystem';
 
 import { add as SetAdd } from 'mnemonist/set';
 import type { Span } from '../trace';
 
-const WHITELIST_DOMAIN = [
-  'w3s.link',
-  'dweb.link',
-  'nftstorage.link',
-  'square.site',
-  'business.site',
-  'page.link', // Firebase URL Shortener
-  'fleek.cool',
-  'notion.site'
-];
 const BLACK_TLD = new Set([
   'accountant',
   'autos',
@@ -114,20 +103,6 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
     return domainSet;
   });
 
-  span.traceChildSync('whitelisting phishing domains', (curSpan) => {
-    const trieForRemovingWhiteListed = curSpan.traceChildSync('create trie for whitelisting', () => createTrie(domainSet));
-
-    return curSpan.traceChild('delete whitelisted from domainset').traceSyncFn(() => {
-      for (let i = 0, len = WHITELIST_DOMAIN.length; i < len; i++) {
-        const white = WHITELIST_DOMAIN[i];
-        domainSet.delete(white);
-        domainSet.delete(`.${white}`);
-
-        trieForRemovingWhiteListed.substractSetInPlaceFromFound(`.${white}`, domainSet);
-      }
-    });
-  });
-
   const domainCountMap: Record<string, number> = {};
 
   span.traceChildSync('process phishing domain set', () => {
@@ -140,7 +115,6 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
 
       const apexDomain = gorhill.getDomain(safeGorhillLine);
       if (!apexDomain) {
-        console.log({ line });
         continue;
       }
 
@@ -203,7 +177,7 @@ export function calcDomainAbuseScore(line: string) {
     }
   }
 
-  const subdomain = tldts.getSubdomain(line, { detectIp: false });
+  const subdomain = getSubdomain(line, { detectIp: false });
 
   if (subdomain) {
     if (subdomain.slice(1).includes('.')) {

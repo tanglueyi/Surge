@@ -11,11 +11,14 @@ import createKeywordFilter from './lib/aho-corasick';
 import { readFileByLine, readFileIntoProcessedArray } from './lib/fetch-text-by-line';
 import { sortDomains } from './lib/stable-sort-domain';
 import { task } from './trace';
-import * as tldts from 'tldts';
+// tldts-experimental is way faster than tldts, but very little bit inaccurate
+// (since it is hashes based). But the result is still deterministic, which is
+// enough when creating a simple stat of reject hosts.
+import * as tldts from 'tldts-experimental';
 import { SHARED_DESCRIPTION } from './lib/constants';
 import { getPhishingDomains } from './lib/get-phishing-domains';
 
-import * as SetHelpers from 'mnemonist/set';
+import { add as SetAdd, subtract as SetSubstract } from 'mnemonist/set';
 import { setAddFromArray } from './lib/set-add-from-array';
 import { sort } from './lib/timsort';
 
@@ -33,9 +36,9 @@ export const buildRejectDomainSet = task(import.meta.path, async (span) => {
       let shouldStop = false;
       await Promise.all([
         // Parse from remote hosts & domain lists
-        ...HOSTS.map(entry => processHosts(childSpan, entry[0], entry[1], entry[2], entry[3]).then(hosts => SetHelpers.add(domainSets, hosts))),
+        ...HOSTS.map(entry => processHosts(childSpan, entry[0], entry[1], entry[2], entry[3]).then(hosts => SetAdd(domainSets, hosts))),
 
-        ...DOMAIN_LISTS.map(entry => processDomainLists(childSpan, entry[0], entry[1], entry[2]).then(hosts => SetHelpers.add(domainSets, hosts))),
+        ...DOMAIN_LISTS.map(entry => processDomainLists(childSpan, entry[0], entry[1], entry[2]).then(hosts => SetAdd(domainSets, hosts))),
 
         ...ADGUARD_FILTERS.map(input => (
           typeof input === 'string'
@@ -58,7 +61,7 @@ export const buildRejectDomainSet = task(import.meta.path, async (span) => {
           setAddFromArray(filterRuleWhitelistDomainSets, black);
         }))),
         getPhishingDomains(childSpan).then(([purePhishingDomains, fullPhishingDomainSet]) => {
-          SetHelpers.add(domainSets, fullPhishingDomainSet);
+          SetAdd(domainSets, fullPhishingDomainSet);
           setAddFromArray(domainSets, purePhishingDomains);
         }),
         childSpan.traceChildAsync('process reject_sukka.conf', async () => {
@@ -73,11 +76,10 @@ export const buildRejectDomainSet = task(import.meta.path, async (span) => {
     process.exit(1);
   }
 
-  let previousSize = domainSets.size;
-  console.log(`Import ${previousSize} rules from Hosts / AdBlock Filter Rules & reject_sukka.conf!`);
+  console.log(`Import ${domainSets.size} rules from Hosts / AdBlock Filter Rules & reject_sukka.conf!`);
 
   // Dedupe domainSets
-  await span.traceChildAsync('dedupe from black keywords', async (childSpan) => {
+  await span.traceChildAsync('dedupe from black keywords/suffixes', async (childSpan) => {
     /** Collect DOMAIN-KEYWORD from non_ip/reject.conf for deduplication */
     const domainKeywordsSet = new Set<string>();
 
@@ -94,23 +96,9 @@ export const buildRejectDomainSet = task(import.meta.path, async (span) => {
     });
 
     // Remove as many domains as possible from domainSets before creating trie
-    SetHelpers.subtract(domainSets, filterRuleWhitelistDomainSets);
+    SetSubstract(domainSets, filterRuleWhitelistDomainSets);
 
-    childSpan.traceChildSync('dedupe from white suffixes', () => {
-      const trie = createTrie(domainSets);
-
-      filterRuleWhitelistDomainSets.forEach(suffix => {
-        trie.substractSetInPlaceFromFound(suffix, domainSets);
-        if (suffix[0] === '.') {
-          domainSets.delete(suffix.slice(1));
-          domainSets.delete(suffix);
-        } else {
-          domainSets.delete(`.${suffix}`);
-          domainSets.delete(suffix);
-        }
-      });
-    });
-
+    // Perform kwfilter to remove as many domains as possible from domainSets before creating trie
     childSpan.traceChildSync('dedupe from black keywords', () => {
       const kwfilter = createKeywordFilter(domainKeywordsSet);
 
@@ -121,15 +109,18 @@ export const buildRejectDomainSet = task(import.meta.path, async (span) => {
         }
       }
     });
-
-    console.log(`Deduped ${previousSize} - ${domainSets.size} = ${previousSize - domainSets.size} from black keywords and suffixes!`);
   });
-  previousSize = domainSets.size;
+
+  const trie = createTrie(domainSets, true, true);
+  span.traceChildSync('dedupe from white suffixes', () => {
+    filterRuleWhitelistDomainSets.forEach(suffix => {
+      trie.whitelist(suffix);
+    });
+  });
 
   // Dedupe domainSets
-  const dudupedDominArray = span.traceChildSync('dedupe from covered subdomain', () => domainDeduper(Array.from(domainSets)));
+  const dudupedDominArray = span.traceChildSync('dedupe from covered subdomain', () => domainDeduper(trie));
 
-  console.log(`Deduped ${previousSize - dudupedDominArray.length} rules from covered subdomain!`);
   console.log(`Final size ${dudupedDominArray.length}`);
 
   // Create reject stats
