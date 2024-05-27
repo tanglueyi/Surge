@@ -19,49 +19,66 @@ export const HOSTS: HostsSource[] = [
   ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Huawei-AdBlock.txt', null, false, TTL.THREE_DAYS()],
   // ad-wars is not actively maintained, so we set a 7 days cache ttl
   ['https://raw.githubusercontent.com/jdlingyu/ad-wars/master/hosts', null, false, TTL.ONE_WEEK()],
-  ['https://raw.githubusercontent.com/durablenapkin/block/master/luminati.txt', null, true, TTL.THREE_HOURS()],
-  // Curben's UrlHaus Malicious URL Blocklist
-  [
-    'https://curbengh.github.io/urlhaus-filter/urlhaus-filter-hosts.txt',
-    [
-      'https://urlhaus-filter.pages.dev/urlhaus-filter-hosts.txt',
-      'https://malware-filter.gitlab.io/urlhaus-filter/urlhaus-filter-hosts.txt'
-    ],
-    true,
-    TTL.THREE_HOURS()
-  ]
-  // Curben's Phishing URL Blocklist
-  // Covered by lib/get-phishing-domains.ts
-  // 'https://curbengh.github.io/phishing-filter/phishing-filter-agh.txt'
-  // 'https://phishing-filter.pages.dev/phishing-filter-agh.txt'
-  // ['https://curbengh.github.io/phishing-filter/phishing-filter-hosts.txt', true, true],
+  ['https://raw.githubusercontent.com/durablenapkin/block/master/luminati.txt', null, true, TTL.THREE_HOURS()]
 ] as const;
 
-export const DOMAIN_LISTS = [
+export const DOMAIN_LISTS: HostsSource[] = [
   // CoinBlockerList
   // Although the hosts file is still actively maintained, the hosts_browser file is not updated since 2021-07, so we set a 14 days cache ttl
-  ['https://zerodot1.gitlab.io/CoinBlockerLists/list_browser.txt', true, TTL.TWO_WEEKS()],
+  ['https://zerodot1.gitlab.io/CoinBlockerLists/list_browser.txt', [], true, TTL.TWO_WEEKS()],
   // BarbBlock
   // The barbblock list has never been updated since 2019-05, so we set a 14 days cache ttl
-  ['https://paulgb.github.io/BarbBlock/blacklists/domain-list.txt', true, TTL.TWO_WEEKS()],
+  ['https://paulgb.github.io/BarbBlock/blacklists/domain-list.txt', [], true, TTL.TWO_WEEKS()],
   // DigitalSide Threat-Intel - OSINT Hub
   // Update once per day
-  ['https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt', true, TTL.ONE_DAY()],
+  ['https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt', [], true, TTL.ONE_DAY()],
   // Curben's PUP Domains Blocklist
   // 'https://curbengh.github.io/pup-filter/pup-filter-agh.txt'
   // 'https://pup-filter.pages.dev/pup-filter-agh.txt'
   // The PUP filter has paused the update since 2023-05, so we set a 14 days cache ttl
-  ['https://curbengh.github.io/pup-filter/pup-filter-domains.txt', true, TTL.TWO_WEEKS()],
+  [
+    'https://curbengh.github.io/pup-filter/pup-filter-domains.txt',
+    [
+      'https://pup-filter.pages.dev/pup-filter-domains.txt',
+      'https://malware-filter.gitlab.io/pup-filter/pup-filter-domains.txt'
+    ],
+    true, TTL.TWO_WEEKS()
+  ],
+  // Curben's UrlHaus Malicious URL Blocklist
+  [
+    'https://curbengh.github.io/urlhaus-filter/urlhaus-filter-domains.txt',
+    [
+      'https://urlhaus-filter.pages.dev/urlhaus-filter-domains.txt',
+      'https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-domains.txt'
+    ],
+    true, TTL.THREE_HOURS()
+  ],
   // AdGuard CNAME Filter Combined
   // Update on a 7 days basis, so we add a 3 hours cache ttl
-  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_ads_justdomains.txt', true, TTL.THREE_DAYS()],
-  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_trackers_justdomains.txt', true, TTL.THREE_DAYS()],
-  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_clickthroughs_justdomains.txt', true, TTL.THREE_DAYS()],
-  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_microsites_justdomains.txt', true, TTL.THREE_DAYS()],
-  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_mail_trackers_justdomains.txt', true, TTL.THREE_DAYS()]
+  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_ads_justdomains.txt', [], true, TTL.THREE_DAYS()],
+  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_trackers_justdomains.txt', [], true, TTL.THREE_DAYS()],
+  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_clickthroughs_justdomains.txt', [], true, TTL.THREE_DAYS()],
+  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_microsites_justdomains.txt', [], true, TTL.THREE_DAYS()],
+  ['https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_mail_trackers_justdomains.txt', [], true, TTL.THREE_DAYS()]
 ] as const;
 
-type AdGuardFilterSource = string | [main: string, mirrors: string[] | null, ttl: number];
+export const PHISHING_DOMAIN_LISTS: [HostsSource, HostsSource] = [
+  [
+    'https://curbengh.github.io/phishing-filter/phishing-filter-domains.txt',
+    [
+      'https://phishing-filter.pages.dev/phishing-filter-domains.txt',
+      'https://malware-filter.gitlab.io/malware-filter/phishing-filter-domains.txt'
+    ],
+    true, TTL.THREE_HOURS()
+  ],
+  [
+    'https://phishing.army/download/phishing_army_blocklist.txt',
+    [],
+    true, TTL.THREE_HOURS()
+  ]
+] as const;
+
+type AdGuardFilterSource = [main: string, mirrors: string[] | null, ttl: number];
 
 export const ADGUARD_FILTERS: AdGuardFilterSource[] = [
   // EasyList
@@ -176,64 +193,58 @@ export const ADGUARD_FILTERS: AdGuardFilterSource[] = [
 ] as const;
 
 export const PREDEFINED_WHITELIST = [
-  'localhost',
-  'local',
-  'localhost.localdomain',
-  'broadcasthost',
-  'ip6-loopback',
-  'ip6-localnet',
-  'ip6-mcastprefix',
-  'ip6-allnodes',
-  'ip6-allrouters',
-  'ip6-allhosts',
-  'mcastprefix',
-  'skk.moe',
+  '.localhost',
+  '.local',
+  '.localhost.localdomain',
+  '.broadcasthost',
+  '.ip6-loopback',
+  '.ip6-localnet',
+  '.ip6-mcastprefix',
+  '.ip6-allnodes',
+  '.ip6-allrouters',
+  '.ip6-allhosts',
+  '.mcastprefix',
+  '.skk.moe',
   'analytics.google.com',
-  'cloud.answerhub.com',
+  '.cloud.answerhub.com',
   'ae01.alicdn.com',
-  'whoami.akamai.net',
-  'whoami.ds.akahelp.net',
+  '.whoami.akamai.net',
+  '.whoami.ds.akahelp.net',
   'pxlk9.net.', // This one is malformed from EasyList, which I will manually add instead
-  'instant.page', // No, it doesn't violate anyone's privacy. I will whitelist it
-  'piwik.pro',
+  '.instant.page', // No, it doesn't violate anyone's privacy. I will whitelist it
+  '.piwik.pro',
   'mixpanel.com',
   'cdn.mxpnl.com',
-  'heapanalytics.com',
-  'segment.com',
-  'segmentify.com',
-  't.co', // pgl yoyo add t.co to the blacklist
-  'survicate.com', // AdGuardDNSFilter
-  'perfops.io', // AdGuardDNSFilter
-  'd2axgrpnciinw7.cloudfront.net', // ADGuardDNSFilter
-  'sb-cd.com', // AdGuard
-  'storage.yandexcloud.net', // phishing list
-  'login.microsoftonline.com', // phishing list
+  '.heapanalytics.com',
+  '.segment.com',
+  '.segmentify.com',
+  '.t.co', // pgl yoyo add t.co to the blacklist
+  '.survicate.com', // AdGuardDNSFilter
+  '.perfops.io', // AdGuardDNSFilter
+  '.d2axgrpnciinw7.cloudfront.net', // ADGuardDNSFilter
+  '.sb-cd.com', // AdGuard
+  '.storage.yandexcloud.net', // phishing list
+  '.login.microsoftonline.com', // phishing list
   'api.xiaomi.com', // https://github.com/jerryn70/GoodbyeAds/issues/281
   'api.io.mi.com', // https://github.com/jerryn70/GoodbyeAds/issues/281
-  'cdn.userreport.com', // https://github.com/AdguardTeam/AdGuardSDNSFilter/issues/1158
-  'ip-api.com',
-  'fastly-analytics.com',
-  'digitaloceanspaces.com',
+  '.cdn.userreport.com', // https://github.com/AdguardTeam/AdGuardSDNSFilter/issues/1158
+  '.ip-api.com',
+  '.fastly-analytics.com',
+  '.digitaloceanspaces.com',
   's3.nl-ams.scw.cloud',
-  'geolocation-db.com',
-  'uploads.codesandbox.io',
-  'vlscppe.microsoft.com', // Affect Windows ISO download https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_trackers.txt
-  'statsig.com', // OpenAI use this for A/B testing
-  'pstmrk.it', // Fuck Peter Lowe Hosts
-  'clicks.mlsend.com', // Fuck Peter Lowe Hosts
+  '.geolocation-db.com',
+  '.uploads.codesandbox.io',
+  '.vlscppe.microsoft.com', // Affect Windows ISO download https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_trackers.txt
+  '.statsig.com', // OpenAI use this for A/B testing
+  '.pstmrk.it', // Fuck Peter Lowe Hosts
+  '.clicks.mlsend.com', // Fuck Peter Lowe Hosts
   'email.accounts.bitly.com', // Fuck Peter Lowe Hosts
   'adsense.google.com', // Fuck Peter Lowe Hosts
   'api.vip.miui.com', // Fuck Goodbye Xiaomi Ads
-  'stripe.com', // EasyPrivacy only blocks m.stripe.com wwith $third-party,
+  'staging.ai.api.xiaomi.com', // Fuck Goodbye Xiaomi Ads
+  'm.stripe.com', // EasyPrivacy only blocks m.stripe.com wwith $third-party,
   // yet stupid AdGuardDNSFilter blocks all of it. Stupid AdGuard
-  'w3s.link', // ipfs gateway
-  'dweb.link', // ipfs gateway
-  'nftstorage.link', // ipfs gateway
-  'fleek.cool', // ipfs gateway
-  'square.site', // Drag'n'Drop site building platform
-  'business.site', // Drag'n'Drop site building platform
-  'page.link', // Firebase URL Shortener
-  'notion.site'
+  '.w3s.link' // stupid phishing.army, introduce both "*.ipfs.w3s.link" and ".w3s.link" to the block list
 ];
 
 export const PREDEFINED_ENFORCED_WHITELIST = [

@@ -3,7 +3,6 @@ import { parse } from 'csv-parse/sync';
 import { createTrie } from './lib/trie';
 import path from 'path';
 import { processLine } from './lib/process-line';
-import { extract } from 'tar-stream';
 import { extractDomainsFromFelixDnsmasq } from './lib/parse-dnsmasq';
 
 export const parseDomesticList = async () => {
@@ -15,7 +14,7 @@ export const parseDomesticList = async () => {
     }
   }
 
-  const trie = createTrie(set);
+  const trie = createTrie(set, true);
 
   const top5000 = new Set<string>();
 

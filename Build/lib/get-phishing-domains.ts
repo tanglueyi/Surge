@@ -1,10 +1,11 @@
 import { getGorhillPublicSuffixPromise } from './get-gorhill-publicsuffix';
 import { processDomainLists } from './parse-filter';
-import { getSubdomain } from 'tldts';
-import { TTL } from './cache-filesystem';
+import { getSubdomain, getPublicSuffix } from 'tldts-experimental';
 
-import { add as SetAdd } from 'mnemonist/set';
 import type { Span } from '../trace';
+import { appendArrayInPlaceCurried } from './append-array-in-place';
+import { PHISHING_DOMAIN_LISTS } from './reject-data-source';
+import { looseTldtsOpt } from '../constants/loose-tldts-opt';
 
 const BLACK_TLD = new Set([
   'accountant',
@@ -33,12 +34,14 @@ const BLACK_TLD = new Set([
   'cricket',
   'cyou',
   'date',
+  'digital',
   'download',
   'faith',
   'fit',
   'fun',
   'ga',
   'gd',
+  'gives',
   'gq',
   'group',
   'host',
@@ -89,16 +92,24 @@ const BLACK_TLD = new Set([
   'design'
 ]);
 
+export const WHITELIST_MAIN_DOMAINS = new Set([
+  'w3s.link', // ipfs gateway
+  'dweb.link', // ipfs gateway
+  'nftstorage.link', // ipfs gateway
+  'fleek.cool', // ipfs gateway
+  'business.site', // Drag'n'Drop site building platform
+  'page.link', // Firebase URL Shortener
+  'notion.site'
+]);
+
 export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('get phishing domains').traceAsyncFn(async (span) => {
   const gorhill = await getGorhillPublicSuffixPromise();
 
-  const domainSet = await span.traceChildAsync('download/parse/merge phishing domains', async (curSpan) => {
-    const [domainSet, domainSet2] = await Promise.all([
-      processDomainLists(curSpan, 'https://curbengh.github.io/phishing-filter/phishing-filter-domains.txt', true, TTL.THREE_HOURS()),
-      processDomainLists(curSpan, 'https://phishing.army/download/phishing_army_blocklist.txt', true, TTL.THREE_HOURS())
-    ]);
+  const domainArr = await span.traceChildAsync('download/parse/merge phishing domains', async (curSpan) => {
+    const domainSet: string[] = [];
 
-    SetAdd(domainSet, domainSet2);
+    (await Promise.all(PHISHING_DOMAIN_LISTS.map(entry => processDomainLists(curSpan, ...entry))))
+      .forEach(appendArrayInPlaceCurried(domainSet));
 
     return domainSet;
   });
@@ -106,8 +117,6 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
   const domainCountMap: Record<string, number> = {};
 
   span.traceChildSync('process phishing domain set', () => {
-    const domainArr = Array.from(domainSet);
-
     for (let i = 0, len = domainArr.length; i < len; i++) {
       const line = domainArr[i];
 
@@ -118,25 +127,21 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
         continue;
       }
 
-      const tld = gorhill.getPublicSuffix(safeGorhillLine);
-      if (!tld || !BLACK_TLD.has(tld)) continue;
+      const tld = getPublicSuffix(safeGorhillLine, looseTldtsOpt);
+      if (!tld || (!BLACK_TLD.has(tld) && tld.length < 7)) continue;
 
       domainCountMap[apexDomain] ||= 0;
       domainCountMap[apexDomain] += calcDomainAbuseScore(line);
     }
   });
 
-  const results = span.traceChildSync('get final phishing results', () => {
-    const res: string[] = [];
-    for (const domain in domainCountMap) {
-      if (domainCountMap[domain] >= 8) {
-        res.push(`.${domain}`);
-      }
+  for (const domain in domainCountMap) {
+    if (domainCountMap[domain] >= 8 && !WHITELIST_MAIN_DOMAINS.has(domain)) {
+      domainArr.push(`.${domain}`);
     }
-    return res;
-  });
+  }
 
-  return [results, domainSet] as const;
+  return domainArr;
 });
 
 export function calcDomainAbuseScore(line: string) {
@@ -156,7 +161,8 @@ export function calcDomainAbuseScore(line: string) {
     if (isPhishingDomainMockingCoJp) {
       weight += 4;
     }
-  } else if (line.includes('.customer')) {
+  }
+  if (line.includes('.customer')) {
     weight += 0.25;
   }
 
@@ -177,7 +183,7 @@ export function calcDomainAbuseScore(line: string) {
     }
   }
 
-  const subdomain = getSubdomain(line, { detectIp: false });
+  const subdomain = getSubdomain(line, looseTldtsOpt);
 
   if (subdomain) {
     if (subdomain.slice(1).includes('.')) {
