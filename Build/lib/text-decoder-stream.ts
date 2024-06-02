@@ -15,6 +15,8 @@
 // Polyfill for TextEncoderStream and TextDecoderStream
 // Modified by Sukka (https://skk.moe) to increase compatibility and performance with Bun.
 
+type TextDecodeOptions = Parameters<TextDecoder['decode']>[1];
+
 export class PolyfillTextDecoderStream extends TransformStream<Uint8Array, string> {
   readonly fatal: boolean;
   readonly ignoreBOM: boolean;
