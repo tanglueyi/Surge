@@ -5,35 +5,35 @@ import { TextLineStream } from './text-line-transform-stream';
 import { PolyfillTextDecoderStream } from './text-decoder-stream';
 import { processLine } from './process-line';
 
-const enableTextLineStream = !!process.env.ENABLE_TEXT_LINE_STREAM;
+// const enableTextLineStream = !!process.env.ENABLE_TEXT_LINE_STREAM;
 
-const decoder = new TextDecoder('utf-8');
-async function *createTextLineAsyncIterableFromStreamSource(stream: ReadableStream<Uint8Array>): AsyncIterable<string> {
-  let buf = '';
+// const decoder = new TextDecoder('utf-8');
+// async function *createTextLineAsyncIterableFromStreamSource(stream: ReadableStream<Uint8Array>): AsyncIterable<string> {
+//   let buf = '';
 
-  const reader = stream.getReader();
+//   const reader = stream.getReader();
 
-  while (true) {
-    const res = await reader.read();
-    if (res.done) {
-      break;
-    }
-    const chunkStr = decoder.decode(res.value).replaceAll('\r\n', '\n');
-    for (let i = 0, len = chunkStr.length; i < len; i++) {
-      const char = chunkStr[i];
-      if (char === '\n') {
-        yield buf;
-        buf = '';
-      } else {
-        buf += char;
-      }
-    }
-  }
+//   while (true) {
+//     const res = await reader.read();
+//     if (res.done) {
+//       break;
+//     }
+//     const chunkStr = decoder.decode(res.value).replaceAll('\r\n', '\n');
+//     for (let i = 0, len = chunkStr.length; i < len; i++) {
+//       const char = chunkStr[i];
+//       if (char === '\n') {
+//         yield buf;
+//         buf = '';
+//       } else {
+//         buf += char;
+//       }
+//     }
+//   }
 
-  if (buf) {
-    yield buf;
-  }
-}
+//   if (buf) {
+//     yield buf;
+//   }
+// }
 
 const getBunBlob = (file: string | URL | BunFile) => {
   if (typeof file === 'string') {
@@ -44,10 +44,10 @@ const getBunBlob = (file: string | URL | BunFile) => {
   return file;
 };
 
-// @ts-expect-error -- ReadableStream<string> should be AsyncIterable<string>
-export const readFileByLine: ((file: string | URL | BunFile) => AsyncIterable<string>) = enableTextLineStream
-  ? (file: string | URL | BunFile) => getBunBlob(file).stream().pipeThrough(new PolyfillTextDecoderStream()).pipeThrough(new TextLineStream())
-  : (file: string | URL | BunFile) => createTextLineAsyncIterableFromStreamSource(getBunBlob(file).stream());
+export const readFileByLine: ((file: string | URL | BunFile) => AsyncIterable<string>) = (file: string | URL | BunFile) => getBunBlob(file)
+  .stream()
+  .pipeThrough(new PolyfillTextDecoderStream())
+  .pipeThrough(new TextLineStream());
 
 const ensureResponseBody = (resp: Response) => {
   if (!resp.body) {
@@ -59,22 +59,14 @@ const ensureResponseBody = (resp: Response) => {
   return resp.body;
 };
 
-// @ts-expect-error -- ReadableStream<string> should be AsyncIterable<string>
-export const createReadlineInterfaceFromResponse: ((resp: Response) => AsyncIterable<string>) = enableTextLineStream
-  ? (resp) => ensureResponseBody(resp).pipeThrough(new PolyfillTextDecoderStream()).pipeThrough(new TextLineStream())
-  : (resp) => createTextLineAsyncIterableFromStreamSource(ensureResponseBody(resp));
+export const createReadlineInterfaceFromResponse: ((resp: Response) => AsyncIterable<string>) = (resp) => ensureResponseBody(resp)
+  .pipeThrough(new PolyfillTextDecoderStream())
+  .pipeThrough(new TextLineStream());
 
-export function fetchRemoteTextByLine(url: string | URL) {
-  return fetchWithRetry(url, defaultRequestInit).then(createReadlineInterfaceFromResponse);
-}
+export const fetchRemoteTextByLine = (url: string | URL) => fetchWithRetry(url, defaultRequestInit).then(createReadlineInterfaceFromResponse);
 
-export async function readFileIntoProcessedArray(file: string | URL | BunFile) {
-  if (typeof file === 'string') {
-    file = Bun.file(file);
-  } else if (!('writer' in file)) {
-    file = Bun.file(file);
-  }
-
-  const content = await file.text();
-  return content.split('\n').filter(processLine);
-}
+export const readFileIntoProcessedArray = (file: string | URL | BunFile) => getBunBlob(file)
+  .text()
+  .then(
+    content => content.split('\n').filter(processLine)
+  );

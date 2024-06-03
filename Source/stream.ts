@@ -233,7 +233,13 @@ const ENCORE_TVB: StreamService = {
 
     'USER-AGENT,encoreTVB*',
 
-    'USER-AGENT,TVer-Release*',
+    'USER-AGENT,TVer-Release*'
+  ]
+};
+
+const ENCORE_TVB_JP_TVER = {
+  name: 'encoreTVB JP',
+  rules: [
     'DOMAIN-SUFFIX,tver.jp'
   ]
 };
@@ -319,17 +325,23 @@ const HIMALAYA_FM: StreamService = {
 const HULU: StreamService = {
   name: 'Hulu',
   rules: [
-    'DOMAIN-SUFFIX,happyon.jp',
     'DOMAIN-SUFFIX,hulu.com',
-    'DOMAIN-SUFFIX,hulu.jp',
     'DOMAIN-SUFFIX,hulu.tv',
     'DOMAIN-SUFFIX,hulu.us',
     'DOMAIN-SUFFIX,huluim.com',
     'DOMAIN-SUFFIX,hulustream.com',
-    'DOMAIN-SUFFIX,hjholdings.jp',
 
     'USER-AGENT,Hulu*',
     'PROCESS-NAME,com.hulu.plus'
+  ]
+};
+
+const HULU_JP: StreamService = {
+  name: 'Hulu Japan',
+  rules: [
+    'DOMAIN-SUFFIX,happyon.jp',
+    'DOMAIN-SUFFIX,hjholdings.jp',
+    'DOMAIN-SUFFIX,hulu.jp'
   ]
 };
 
@@ -763,6 +775,7 @@ export const ALL = [
   BAHAMUT, BBC, BILIBILI_INTL,
   DAZN, DEEZER, DISNEY_PLUS, DISCOVERY_PLUS, DMM,
   ENCORE_TVB,
+  ENCORE_TVB_JP_TVER,
   FOX_NOW, FOX_PLUS,
   HBO, HBO_ASIA, HIMALAYA_FM, HULU, HWTV,
   IQIYI_GLOBAL, ITV,
@@ -786,6 +799,7 @@ export const NORTH_AMERICA = [
   FOX_NOW,
   FOX_PLUS,
   HULU, // Hulu US
+  HULU_JP,
   // HBO,
   // www.nfl.com
   // epix.com
@@ -875,13 +889,13 @@ export const JP = [
   DMM,
   // DMMTV
   ABEMA_TV,
-  NICONICO
+  NICONICO,
   // music.jp
   // Telasa
   // Paravi
   // unext
-  // HuluJP
-  // TVer
+  HULU_JP,
+  ENCORE_TVB_JP_TVER
   // GYAO!
   // wowow
   // VideoMarket
