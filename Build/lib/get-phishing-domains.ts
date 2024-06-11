@@ -153,13 +153,20 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
 const sensitiveKeywords = createKeywordFilter([
   '-roblox',
   '.amazon-',
-  '.www-',
-  'fb-com'
+  '-amazon',
+  'fb-com',
+  'facebook-',
+  '-facebook',
+  'coinbase',
+  'metamask-',
+  '-metamask',
+  'virus-'
 ]);
 const lowKeywords = createKeywordFilter([
   '-co-jp',
   'customer.',
-  'customer-'
+  'customer-',
+  '.www-'
 ]);
 
 export function calcDomainAbuseScore(line: string, subdomain: string | null) {
