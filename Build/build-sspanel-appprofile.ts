@@ -1,5 +1,5 @@
 import { getAppleCdnDomainsPromise } from './build-apple-cdn';
-import { getDomesticDomainsRulesetPromise } from './build-domestic-ruleset';
+import { getDomesticAndDirectDomainsRulesetPromise } from './build-domestic-direct-lan-ruleset-dns-mapping-module';
 import { surgeRulesetToClashClassicalTextRuleset, surgeDomainsetToClashRuleset } from './lib/clash';
 import { readFileIntoProcessedArray } from './lib/fetch-text-by-line';
 import { task } from './trace';
@@ -28,7 +28,7 @@ const removeNoResolved = (line: string) => line.replace(',no-resolve', '');
  */
 export const buildSSPanelUIMAppProfile = task(import.meta.main, import.meta.path)(async (span) => {
   const [
-    domesticDomains,
+    [domesticDomains, directDomains, lanDomains],
     appleCdnDomains,
     microsoftCdnDomains,
     appleCnDomains,
@@ -39,14 +39,18 @@ export const buildSSPanelUIMAppProfile = task(import.meta.main, import.meta.path
     steamDomains,
     globalDomains,
     telegramDomains,
-    lanDomains,
     domesticCidrs,
     streamCidrs,
     { results: rawTelegramCidrs },
     lanCidrs
   ] = await Promise.all([
     // domestic - domains
-    getDomesticDomainsRulesetPromise().then(surgeRulesetToClashClassicalTextRuleset),
+    getDomesticAndDirectDomainsRulesetPromise()
+      .then(
+        data => (
+          data.map(surgeRulesetToClashClassicalTextRuleset)
+        ) as [string[], string[], string[]]
+      ),
     getAppleCdnDomainsPromise().then(domains => domains.map(domain => `DOMAIN-SUFFIX,${domain}`)),
     getMicrosoftCdnRulesetPromise().then(surgeRulesetToClashClassicalTextRuleset),
     readFileIntoProcessedArray(path.resolve(import.meta.dir, '../Source/non_ip/apple_cn.conf')),
@@ -61,8 +65,6 @@ export const buildSSPanelUIMAppProfile = task(import.meta.main, import.meta.path
     // global - domains
     readFileIntoProcessedArray(path.resolve(import.meta.dir, '../Source/non_ip/global.conf')).then(surgeRulesetToClashClassicalTextRuleset),
     readFileIntoProcessedArray(path.resolve(import.meta.dir, '../Source/non_ip/telegram.conf')).then(surgeRulesetToClashClassicalTextRuleset),
-    // lan - domains
-    readFileIntoProcessedArray(path.resolve(import.meta.dir, '../Source/non_ip/lan.conf')),
     // domestic - ip cidr
     getChnCidrPromise().then(cidrs => cidrs.map(cidr => `IP-CIDR,${cidr}`)),
     AllStreamServices.flatMap((i) => (
@@ -99,7 +101,10 @@ export const buildSSPanelUIMAppProfile = task(import.meta.main, import.meta.path
       ...globalDomains,
       ...telegramDomains
     ],
-    lanDomains,
+    [
+      ...directDomains,
+      ...lanDomains
+    ],
     domesticCidrs,
     streamCidrs,
     [
