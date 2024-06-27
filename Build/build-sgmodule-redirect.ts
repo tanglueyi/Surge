@@ -2,13 +2,14 @@ import path from 'path';
 import { task } from './trace';
 import { compareAndWriteFile } from './lib/create-file';
 import { getHostname } from 'tldts';
+import { isTruthy } from './lib/misc';
 
 function escapeRegExp(string = '') {
   const reRegExpChar = /[$()*+.?[\\\]^{|}]/g;
   const reHasRegExpChar = new RegExp(reRegExpChar.source);
 
   return string && reHasRegExpChar.test(string)
-    ? string.replaceAll(reRegExpChar, '\\$&')
+    ? string.replaceAll(reRegExpChar, String.raw`\$&`)
     : string;
 }
 
@@ -119,14 +120,10 @@ const REDIRECT_FAKEWEBSITES = [
 ] as const;
 
 export const buildRedirectModule = task(import.meta.main, import.meta.path)(async (span) => {
-  const domains = Array.from(
-    new Set(
-      [
-        ...REDIRECT_MIRROR.map(([from]) => getHostname(from, { detectIp: false })),
-        ...REDIRECT_FAKEWEBSITES.flatMap(([from]) => [from, `www.${from}`])
-      ]
-    )
-  ).filter(Boolean);
+  const domains = Array.from(new Set([
+    ...REDIRECT_MIRROR.map(([from]) => getHostname(from, { detectIp: false })),
+    ...REDIRECT_FAKEWEBSITES.flatMap(([from]) => [from, `www.${from}`])
+  ])).filter(isTruthy);
 
   return compareAndWriteFile(
     span,
