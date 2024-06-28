@@ -4,23 +4,21 @@
 
 // const { Error, Bun, JSON, Symbol } = globalThis;
 
-const SENTINEL = Symbol('SENTINEL');
-const PARENT = Symbol('Parent Node');
-
 const noop = () => { /** noop */ };
 
-type TrieNode = {
-  [SENTINEL]: boolean,
-  [PARENT]: TrieNode | null,
-  [Bun.inspect.custom]: () => string
-} & Map<string, TrieNode>;
+interface TrieNode {
+  sentinel: boolean,
+  parent: TrieNode | null,
+  [Bun.inspect.custom](): string,
+  children: Map<string, TrieNode>
+}
 
 const deepTrieNodeToJSON = (node: TrieNode) => {
   const obj: Record<string, any> = {};
-  if (node[SENTINEL]) {
-    obj['[start]'] = node[SENTINEL];
+  if (node.sentinel) {
+    obj['[start]'] = node.sentinel;
   }
-  node.forEach((value, key) => {
+  node.children.forEach((value, key) => {
     obj[key] = deepTrieNodeToJSON(value);
   });
   return obj;
@@ -31,11 +29,12 @@ function trieNodeInspectCustom(this: TrieNode) {
 }
 
 const createNode = (parent: TrieNode | null = null): TrieNode => {
-  const node = new Map<string, TrieNode>() as TrieNode;
-  node[SENTINEL] = false;
-  node[PARENT] = parent;
-  node[Bun.inspect.custom] = trieNodeInspectCustom;
-  return node;
+  return {
+    sentinel: false,
+    parent,
+    children: new Map<string, TrieNode>(),
+    [Bun.inspect.custom]: trieNodeInspectCustom
+  };
 };
 
 const hostnameToTokens = (hostname: string): string[] => {
@@ -82,17 +81,17 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
     for (let i = tokens.length - 1; i >= 0; i--) {
       token = tokens[i];
 
-      if (node.has(token)) {
-        node = node.get(token)!;
+      if (node.children.has(token)) {
+        node = node.children.get(token)!;
 
         // During the adding of `[start]blog|.skk.moe` and find out that there is a `[start].skk.moe` in the trie
         // Dedupe the covered subdomain by skipping
-        if (smolTree && token === '.' && node[SENTINEL]) {
+        if (smolTree && token === '.' && node.sentinel) {
           return;
         }
       } else {
         const newNode = createNode(node);
-        node.set(token, newNode);
+        node.children.set(token, newNode);
         node = newNode;
       }
     }
@@ -102,26 +101,26 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
       if (tokens[0] === '.') {
         // Trying to add `[start].sub.example.com` where there is already a `[start]blog.sub.example.com` in the trie
 
-        const parent = node[PARENT]!;
+        const parent = node.parent!;
 
         // Make sure parent `[start]sub.example.com` (without dot) is removed (SETINEL to false)
-        parent[SENTINEL] = false;
+        parent.sentinel = false;
 
         // Removing the rest of the parent's child nodes
-        node.clear();
+        node.children.clear();
         // The SENTINEL of this node will be set to true at the end of the function, so we don't need to set it here
 
         // we can use else-if here, because new node is empty, we don't need to check the leading "."
-      } else if (node.get('.')?.[SENTINEL] === true) {
+      } else if (node.children.get('.')?.sentinel === true) {
         // Trying to add `example.com` when there is already a `.example.com` in the trie
         // No need to increment size and set SENTINEL to true (skip this "new" item)
         return;
       }
-    } else if (!node[SENTINEL]) { // smol tree don't have size, so else-if here
+    } else if (!node.sentinel) { // smol tree don't have size, so else-if here
       size++;
     }
 
-    node[SENTINEL] = true;
+    node.sentinel = true;
   };
 
   const walkIntoLeafWithTokens = (
@@ -141,7 +140,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
       }
 
       parent = node;
-      node = node.get(token);
+      node = node.children.get(token);
       if (!node) return null;
 
       onLoop(node, parent, token);
@@ -170,7 +169,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
       node = nodeStack.pop()!;
       const suffix = suffixStack.pop()!;
 
-      node.forEach((childNode, k) => {
+      node.children.forEach((childNode, k) => {
         // Pushing the child node to the stack for next iteration of DFS
         nodeStack.push(childNode);
 
@@ -178,7 +177,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
       });
 
       // If the node is a sentinel, we push the suffix to the results
-      if (node[SENTINEL]) {
+      if (node.sentinel) {
         onMatches(suffix);
       }
     } while (nodeStack.length);
@@ -200,7 +199,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
 
       // Even if the node size is 1, but the single child is ".", we should retain the branch
       // Since the "." could be special if it is the leaf-est node
-      const onlyChild = node.size < 2 && (!hostnameMode || !node.has('.'));
+      const onlyChild = node.children.size < 2 && (!hostnameMode || !node.children.has('.'));
 
       if (toPrune != null) { // the top-est branch that could potentially being pruned
         if (!onlyChild) {
@@ -293,15 +292,15 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
     const res = getSingleChildLeaf(suffixToTokens(suffix));
     if (res === null) return false;
 
-    if (!res.node[SENTINEL]) return false;
+    if (!res.node.sentinel) return false;
 
     size--;
     const { node, toPrune, tokenToPrune } = res;
 
     if (tokenToPrune && toPrune) {
-      toPrune.delete(tokenToPrune);
+      toPrune.children.delete(tokenToPrune);
     } else {
-      node[SENTINEL] = false;
+      node.sentinel = false;
     }
 
     return true;
@@ -315,7 +314,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
     const res = walkIntoLeafWithTokens(tokens);
 
     return res
-      ? res.node[SENTINEL]
+      ? res.node.sentinel
       : false;
   };
 
@@ -346,24 +345,24 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
     // Trying to whitelist `[start].sub.example.com` where there is already a `[start]blog.sub.example.com` in the trie
     if (tokens[0] === '.') {
       // If there is a `[start]sub.example.com` here, remove it
-      parent[SENTINEL] = false;
+      parent.sentinel = false;
       // Removing all the child nodes by disconnecting "."
-      parent.delete('.');
+      parent.children.delete('.');
     }
 
     // Trying to whitelist `example.com` when there is already a `.example.com` in the trie
-    const dotNode = node.get('.');
-    if (dotNode?.[SENTINEL] === true) {
-      dotNode[SENTINEL] = false;
+    const dotNode = node.children.get('.');
+    if (dotNode?.sentinel === true) {
+      dotNode.sentinel = false;
     }
 
     // return early if not found
-    if (!node[SENTINEL]) return;
+    if (!node.sentinel) return;
 
     if (tokenToPrune && toPrune) {
-      toPrune.delete(tokenToPrune);
+      toPrune.children.delete(tokenToPrune);
     } else {
-      node[SENTINEL] = false;
+      node.sentinel = false;
     }
   };
 
