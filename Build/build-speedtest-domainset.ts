@@ -9,12 +9,11 @@ import { task } from './trace';
 import { fetchWithRetry } from './lib/fetch-retry';
 import { SHARED_DESCRIPTION } from './lib/constants';
 import picocolors from 'picocolors';
-import { fetchRemoteTextByLine } from './lib/fetch-text-by-line';
-import { processLine } from './lib/process-line';
+import { readFileIntoProcessedArray } from './lib/fetch-text-by-line';
 import { TTL, deserializeArray, fsFetchCache, serializeArray } from './lib/cache-filesystem';
 import { createMemoizedPromise } from './lib/memo-promise';
 
-import { setAddFromArrayCurried } from './lib/set-add-from-array';
+import { createTrie } from './lib/trie';
 
 const s = new Sema(2);
 
@@ -83,111 +82,111 @@ const querySpeedtestApi = async (keyword: string): Promise<Array<string | null>>
 };
 
 const getPreviousSpeedtestDomainsPromise = createMemoizedPromise(async () => {
-  const domains: string[] = [];
-  for await (const l of await fetchRemoteTextByLine('https://ruleset.skk.moe/List/domainset/speedtest.conf')) {
-    const line = processLine(l);
-    if (line) {
-      domains.push(line);
-    }
+  try {
+    return await readFileIntoProcessedArray(path.resolve(import.meta.dir, '../List/domainset/speedtest.conf'));
+  } catch {
+    return [];
   }
-  return domains;
 });
 
 export const buildSpeedtestDomainSet = task(import.meta.main, import.meta.path)(async (span) => {
-  // Predefined domainset
-  /** @type {Set<string>} */
-  const domains = new Set<string>([
-    // speedtest.net
-    '.speedtest.net',
-    '.speedtestcustom.com',
-    '.ooklaserver.net',
-    '.speed.misaka.one',
-    '.speedtest.rt.ru',
-    '.speedtest.aptg.com.tw',
-    '.speedtest.gslnetworks.com',
-    '.speedtest.jsinfo.net',
-    '.speedtest.i3d.net',
-    '.speedtestkorea.com',
-    '.speedtest.telus.com',
-    '.speedtest.telstra.net',
-    '.speedtest.clouvider.net',
-    '.speedtest.idv.tw',
-    '.speedtest.frontier.com',
-    '.speedtest.orange.fr',
-    '.speedtest.centurylink.net',
-    '.srvr.bell.ca',
-    '.speedtest.contabo.net',
-    'speedtest.hk.chinamobile.com',
-    'speedtestbb.hk.chinamobile.com',
-    '.hizinitestet.com',
-    '.linknetspeedtest.net.br',
-    'speedtest.rit.edu',
-    'speedtest.ropa.de',
-    'speedtest.sits.su',
-    'speedtest.tigo.cr',
-    'speedtest.upp.com',
-    '.speedtest.pni.tw',
-    '.speed.pfm.gg',
-    '.speedtest.faelix.net',
-    '.speedtest.labixe.net',
-    '.speedtest.warian.net',
-    '.speedtest.starhub.com',
-    '.speedtest.gibir.net.tr',
-    '.speedtest.ozarksgo.net',
-    '.speedtest.exetel.com.au',
-    '.speedtest.sbcglobal.net',
-    '.speedtest.leaptel.com.au',
-    '.speedtest.windstream.net',
-    '.speedtest.vodafone.com.au',
-    '.speedtest.rascom.ru',
-    '.speedtest.dchost.com',
-    '.speedtest.highnet.com',
-    '.speedtest.seattle.wa.limewave.net',
-    '.speedtest.optitel.com.au',
-    '.speednet.net.tr',
-    '.speedtest.angolacables.co.ao',
-    '.ookla-speedtest.fsr.com',
-    '.speedtest.comnet.com.tr',
-    '.speedtest.gslnetworks.com.au',
-    '.test.gslnetworks.com.au',
-    '.speedtest.gslnetworks.com',
-    '.speedtestunonet.com.br',
-    '.speedtest.alagas.net',
-    'speedtest.surfshark.com',
-    '.speedtest.aarnet.net.au',
-    '.ookla.rcp.net',
-    '.ookla-speedtests.e2ro.com',
-    '.speedtest.com.sg',
-    '.ookla.ddnsgeek.com',
-    // Cloudflare
-    '.speed.cloudflare.com',
-    // Wi-Fi Man
-    '.wifiman.com',
-    '.wifiman.me',
-    '.wifiman.ubncloud.com',
-    // Fast.com
-    '.fast.com',
-    // MacPaw
-    'speedtest.macpaw.com',
-    // speedtestmaster
-    '.netspeedtestmaster.com',
-    // Google Search Result of "speedtest", powered by this
-    '.measurement-lab.org',
-    '.measurementlab.net',
-    // Google Fiber legacy speedtest site (new fiber speedtest use speedtestcustom.com)
-    '.speed.googlefiber.net',
-    // librespeed
-    '.backend.librespeed.org',
-    // Apple,
-    'mensura.cdn-apple.com', // From netQuality command
-    // OpenSpeedtest
-    'open.cachefly.net'
-  ]);
+  const domainTrie = createTrie(
+    [
+      // speedtest.net
+      '.speedtest.net',
+      '.speedtestcustom.com',
+      '.ooklaserver.net',
+      '.speed.misaka.one',
+      '.speedtest.rt.ru',
+      '.speedtest.aptg.com.tw',
+      '.speedtest.gslnetworks.com',
+      '.speedtest.jsinfo.net',
+      '.speedtest.i3d.net',
+      '.speedtestkorea.com',
+      '.speedtest.telus.com',
+      '.speedtest.telstra.net',
+      '.speedtest.clouvider.net',
+      '.speedtest.idv.tw',
+      '.speedtest.frontier.com',
+      '.speedtest.orange.fr',
+      '.speedtest.centurylink.net',
+      '.srvr.bell.ca',
+      '.speedtest.contabo.net',
+      'speedtest.hk.chinamobile.com',
+      'speedtestbb.hk.chinamobile.com',
+      '.hizinitestet.com',
+      '.linknetspeedtest.net.br',
+      'speedtest.rit.edu',
+      'speedtest.ropa.de',
+      'speedtest.sits.su',
+      'speedtest.tigo.cr',
+      'speedtest.upp.com',
+      '.speedtest.pni.tw',
+      '.speed.pfm.gg',
+      '.speedtest.faelix.net',
+      '.speedtest.labixe.net',
+      '.speedtest.warian.net',
+      '.speedtest.starhub.com',
+      '.speedtest.gibir.net.tr',
+      '.speedtest.ozarksgo.net',
+      '.speedtest.exetel.com.au',
+      '.speedtest.sbcglobal.net',
+      '.speedtest.leaptel.com.au',
+      '.speedtest.windstream.net',
+      '.speedtest.vodafone.com.au',
+      '.speedtest.rascom.ru',
+      '.speedtest.dchost.com',
+      '.speedtest.highnet.com',
+      '.speedtest.seattle.wa.limewave.net',
+      '.speedtest.optitel.com.au',
+      '.speednet.net.tr',
+      '.speedtest.angolacables.co.ao',
+      '.ookla-speedtest.fsr.com',
+      '.speedtest.comnet.com.tr',
+      '.speedtest.gslnetworks.com.au',
+      '.test.gslnetworks.com.au',
+      '.speedtest.gslnetworks.com',
+      '.speedtestunonet.com.br',
+      '.speedtest.alagas.net',
+      'speedtest.surfshark.com',
+      '.speedtest.aarnet.net.au',
+      '.ookla.rcp.net',
+      '.ookla-speedtests.e2ro.com',
+      '.speedtest.com.sg',
+      '.ookla.ddnsgeek.com',
+      '.speedtest.pni.tw',
+      // Cloudflare
+      '.speed.cloudflare.com',
+      // Wi-Fi Man
+      '.wifiman.com',
+      '.wifiman.me',
+      '.wifiman.ubncloud.com',
+      // Fast.com
+      '.fast.com',
+      // MacPaw
+      'speedtest.macpaw.com',
+      // speedtestmaster
+      '.netspeedtestmaster.com',
+      // Google Search Result of "speedtest", powered by this
+      '.measurement-lab.org',
+      '.measurementlab.net',
+      // Google Fiber legacy speedtest site (new fiber speedtest use speedtestcustom.com)
+      '.speed.googlefiber.net',
+      // librespeed
+      '.backend.librespeed.org',
+      // Apple,
+      'mensura.cdn-apple.com', // From netQuality command
+      // OpenSpeedtest
+      'open.cachefly.net'
+    ],
+    true,
+    true
+  );
 
   await span.traceChildAsync(
     'fetch previous speedtest domainset',
     () => getPreviousSpeedtestDomainsPromise()
-      .then(setAddFromArrayCurried(domains))
+      .then(prevDomains => prevDomains.forEach(domainTrie.add))
   );
 
   await new Promise<void>((resolve, reject) => {
@@ -225,7 +224,7 @@ export const buildSpeedtestDomainSet = task(import.meta.main, import.meta.path)(
       pMap[keyword] = span.traceChildAsync(`fetch speedtest endpoints: ${keyword}`, () => querySpeedtestApi(keyword)).then(hostnameGroup => {
         return hostnameGroup.forEach(hostname => {
           if (hostname) {
-            domains.add(hostname);
+            domainTrie.add(hostname);
           }
         });
       });
@@ -248,7 +247,7 @@ export const buildSpeedtestDomainSet = task(import.meta.main, import.meta.path)(
     }).catch(() => reject);
   });
 
-  const deduped = span.traceChildSync('sort result', () => sortDomains(domainDeduper(Array.from(domains))));
+  const deduped = span.traceChildSync('sort result', () => sortDomains(domainDeduper(domainTrie)));
 
   const description = [
     ...SHARED_DESCRIPTION,

@@ -2,61 +2,42 @@
  * Suffix Trie based on Mnemonist Trie
  */
 
+import { fastStringArrayJoin } from './misc';
+
 // const { Error, Bun, JSON, Symbol } = globalThis;
 
 const noop = () => { /** noop */ };
 
-interface TrieNode {
-  sentinel: boolean,
-  parent: TrieNode | null,
-  [Bun.inspect.custom](): string,
-  children: Map<string, TrieNode>
-}
+type TrieNode = [
+  boolean, /** sentinel */
+  TrieNode | null, /** parent */
+  Map<string, TrieNode> /** children */
+];
 
 const deepTrieNodeToJSON = (node: TrieNode) => {
   const obj: Record<string, any> = {};
-  if (node.sentinel) {
-    obj['[start]'] = node.sentinel;
+  if (node[0]) {
+    obj['[start]'] = node[0];
   }
-  node.children.forEach((value, key) => {
+  node[2].forEach((value, key) => {
     obj[key] = deepTrieNodeToJSON(value);
   });
   return obj;
 };
 
-function trieNodeInspectCustom(this: TrieNode) {
-  return JSON.stringify(deepTrieNodeToJSON(this), null, 2);
-}
-
 const createNode = (parent: TrieNode | null = null): TrieNode => {
-  return {
-    sentinel: false,
-    parent,
-    children: new Map<string, TrieNode>(),
-    [Bun.inspect.custom]: trieNodeInspectCustom
-  };
+  return [false, parent, new Map<string, TrieNode>()] as TrieNode;
 };
 
 const hostnameToTokens = (hostname: string): string[] => {
-  let buf = '';
-  const tokens: string[] = [];
-  for (let i = 0, l = hostname.length; i < l; i++) {
-    const c = hostname[i];
-    if (c === '.') {
-      if (buf) {
-        tokens.push(buf, /* . */ c);
-        buf = '';
-      } else {
-        tokens.push(/* . */ c);
-      }
-    } else {
-      buf += c;
+  return hostname.split('.').reduce<string[]>((acc, token, index) => {
+    if (index > 0) {
+      acc.push('.', token);
+    } else if (token.length > 0) {
+      acc.push(token);
     }
-  }
-  if (buf) {
-    tokens.push(buf);
-  }
-  return tokens;
+    return acc;
+  }, []);
 };
 
 export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = false, smolTree = false) => {
@@ -72,62 +53,82 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
   /**
    * Method used to add the given suffix to the trie.
    */
-  const add = (suffix: string): void => {
-    let node: TrieNode = root;
-    let token: string;
+  const add = smolTree
+    ? (suffix: string): void => {
+      let node: TrieNode = root;
+      let token: string;
 
-    const tokens = suffixToTokens(suffix);
+      const tokens = suffixToTokens(suffix);
 
-    for (let i = tokens.length - 1; i >= 0; i--) {
-      token = tokens[i];
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        token = tokens[i];
 
-      if (node.children.has(token)) {
-        node = node.children.get(token)!;
+        if (node[2].has(token)) {
+          node = node[2].get(token)!;
 
-        // During the adding of `[start]blog|.skk.moe` and find out that there is a `[start].skk.moe` in the trie
-        // Dedupe the covered subdomain by skipping
-        if (smolTree && token === '.' && node.sentinel) {
-          return;
+          // During the adding of `[start]blog|.skk.moe` and find out that there is a `[start].skk.moe` in the trie
+          // Dedupe the covered subdomain by skipping
+          if (token === '.' && node[0]) {
+            return;
+          }
+        } else {
+          const newNode = createNode(node);
+          node[2].set(token, newNode);
+          node = newNode;
         }
-      } else {
-        const newNode = createNode(node);
-        node.children.set(token, newNode);
-        node = newNode;
       }
-    }
 
-    // If we are in smolTree mode, we need to do something at the end of the loop
-    if (smolTree) {
+      // If we are in smolTree mode, we need to do something at the end of the loop
       if (tokens[0] === '.') {
         // Trying to add `[start].sub.example.com` where there is already a `[start]blog.sub.example.com` in the trie
 
-        const parent = node.parent!;
+        const parent = node[1]!;
 
         // Make sure parent `[start]sub.example.com` (without dot) is removed (SETINEL to false)
-        parent.sentinel = false;
+        parent[0] = false;
 
         // Removing the rest of the parent's child nodes
-        node.children.clear();
+        node[2].clear();
         // The SENTINEL of this node will be set to true at the end of the function, so we don't need to set it here
 
-        // we can use else-if here, because new node is empty, we don't need to check the leading "."
-      } else if (node.children.get('.')?.sentinel === true) {
+        // we can use else-if here, because the children is now empty, we don't need to check the leading "."
+      } else if (node[2].get('.')?.[0] === true) {
         // Trying to add `example.com` when there is already a `.example.com` in the trie
         // No need to increment size and set SENTINEL to true (skip this "new" item)
         return;
       }
-    } else if (!node.sentinel) { // smol tree don't have size, so else-if here
-      size++;
-    }
 
-    node.sentinel = true;
-  };
+      node[0] = true;
+    }
+    : (suffix: string): void => {
+      let node: TrieNode = root;
+      let token: string;
+
+      const tokens = suffixToTokens(suffix);
+
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        token = tokens[i];
+
+        if (node[2].has(token)) {
+          node = node[2].get(token)!;
+        } else {
+          const newNode = createNode(node);
+          node[2].set(token, newNode);
+          node = newNode;
+        }
+      }
+
+      if (!node[0]) { // smol tree don't have size, so else-if here
+        size++;
+        node[0] = true;
+      }
+    };
 
   const walkIntoLeafWithTokens = (
     tokens: string | string[],
     onLoop: (node: TrieNode, parent: TrieNode, token: string) => void = noop
   ) => {
-    let node: TrieNode | undefined = root;
+    let node: TrieNode = root;
     let parent: TrieNode = node;
 
     let token: string;
@@ -140,8 +141,12 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
       }
 
       parent = node;
-      node = node.children.get(token);
-      if (!node) return null;
+
+      if (node[2].has(token)) {
+        node = node[2].get(token)!;
+      } else {
+        return null;
+      }
 
       onLoop(node, parent, token);
     }
@@ -169,7 +174,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
       node = nodeStack.pop()!;
       const suffix = suffixStack.pop()!;
 
-      node.children.forEach((childNode, k) => {
+      node[2].forEach((childNode, k) => {
         // Pushing the child node to the stack for next iteration of DFS
         nodeStack.push(childNode);
 
@@ -177,7 +182,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
       });
 
       // If the node is a sentinel, we push the suffix to the results
-      if (node.sentinel) {
+      if (node[0]) {
         onMatches(suffix);
       }
     } while (nodeStack.length);
@@ -199,7 +204,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
 
       // Even if the node size is 1, but the single child is ".", we should retain the branch
       // Since the "." could be special if it is the leaf-est node
-      const onlyChild = node.children.size < 2 && (!hostnameMode || !node.children.has('.'));
+      const onlyChild = node[2].size < 2 && (!hostnameMode || !node[2].has('.'));
 
       if (toPrune != null) { // the top-est branch that could potentially being pruned
         if (!onlyChild) {
@@ -258,7 +263,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
       inputTokens
     );
 
-    return hostnameMode ? matches.map((m) => (m as string[]).join('')) : matches as string[];
+    return hostnameMode ? matches.map((m) => fastStringArrayJoin(m as string[], '')) : matches as string[];
   };
 
   /**
@@ -275,7 +280,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
     if (res === null) return;
 
     const onMatches = hostnameMode
-      ? (suffix: string[]) => set.delete(suffix.join(''))
+      ? (suffix: string[]) => set.delete(fastStringArrayJoin(suffix, ''))
       : (suffix: string) => set.delete(suffix);
 
     walk(
@@ -292,15 +297,15 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
     const res = getSingleChildLeaf(suffixToTokens(suffix));
     if (res === null) return false;
 
-    if (!res.node.sentinel) return false;
+    if (!res.node[0]) return false;
 
     size--;
     const { node, toPrune, tokenToPrune } = res;
 
     if (tokenToPrune && toPrune) {
-      toPrune.children.delete(tokenToPrune);
+      toPrune[2].delete(tokenToPrune);
     } else {
-      node.sentinel = false;
+      node[0] = false;
     }
 
     return true;
@@ -314,7 +319,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
     const res = walkIntoLeafWithTokens(tokens);
 
     return res
-      ? res.node.sentinel
+      ? res.node[0]
       : false;
   };
 
@@ -323,7 +328,7 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
 
     walk(suffix => {
       results.push(
-        isHostnameMode(suffix) ? suffix.join('') : suffix
+        isHostnameMode(suffix) ? fastStringArrayJoin(suffix, '') : suffix
       );
     });
 
@@ -345,24 +350,27 @@ export const createTrie = (from?: string[] | Set<string> | null, hostnameMode = 
     // Trying to whitelist `[start].sub.example.com` where there is already a `[start]blog.sub.example.com` in the trie
     if (tokens[0] === '.') {
       // If there is a `[start]sub.example.com` here, remove it
-      parent.sentinel = false;
+      parent[0] = false;
       // Removing all the child nodes by disconnecting "."
-      parent.children.delete('.');
+      parent[2].delete('.');
     }
 
     // Trying to whitelist `example.com` when there is already a `.example.com` in the trie
-    const dotNode = node.children.get('.');
-    if (dotNode?.sentinel === true) {
-      dotNode.sentinel = false;
+    const dotNode = node[2].get('.');
+    if (dotNode) {
+      dotNode[0] = false;
     }
+    // if (dotNode?.s === true) {
+    //   dotnode[0] = false;
+    // }
 
     // return early if not found
-    if (!node.sentinel) return;
+    if (!node[0]) return;
 
     if (tokenToPrune && toPrune) {
-      toPrune.children.delete(tokenToPrune);
+      toPrune[2].delete(tokenToPrune);
     } else {
-      node.sentinel = false;
+      node[0] = false;
     }
   };
 
