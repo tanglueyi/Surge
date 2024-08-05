@@ -7,13 +7,14 @@ import tldts from 'tldts-experimental';
 import picocolors from 'picocolors';
 import { normalizeDomain } from './normalize-domain';
 import { fetchAssets } from './fetch-assets';
-import { deserializeArray, fsFetchCache, serializeArray } from './cache-filesystem';
+import { deserializeArray, fsFetchCache, serializeArray, createCacheKey } from './cache-filesystem';
 import type { Span } from '../trace';
 import createKeywordFilter from './aho-corasick';
+import { looseTldtsOpt } from '../constants/loose-tldts-opt';
 
 const DEBUG_DOMAIN_TO_FIND: string | null = null; // example.com | null
 let foundDebugDomain = false;
-const temporaryBypass = DEBUG_DOMAIN_TO_FIND !== null;
+const temporaryBypass = true;
 
 const domainListLineCb = (l: string, set: string[], includeAllSubDomain: boolean, meta: string) => {
   let line = processLine(l);
@@ -30,9 +31,11 @@ const domainListLineCb = (l: string, set: string[], includeAllSubDomain: boolean
   set.push(includeAllSubDomain ? `.${line}` : line);
 };
 
+const cacheKey = createCacheKey(__filename);
+
 export function processDomainLists(span: Span, domainListsUrl: string, mirrors: string[] | null, includeAllSubDomain = false, ttl: number | null = null) {
   return span.traceChild(`process domainlist: ${domainListsUrl}`).traceAsyncFn((childSpan) => fsFetchCache.apply(
-    domainListsUrl,
+    cacheKey(domainListsUrl),
     async () => {
       const domainSets: string[] = [];
 
@@ -87,7 +90,7 @@ const hostsLineCb = (l: string, set: string[], includeAllSubDomain: boolean, met
 
 export function processHosts(span: Span, hostsUrl: string, mirrors: string[] | null, includeAllSubDomain = false, ttl: number | null = null) {
   return span.traceChild(`processhosts: ${hostsUrl}`).traceAsyncFn((childSpan) => fsFetchCache.apply(
-    hostsUrl,
+    cacheKey(hostsUrl),
     async () => {
       const domainSets: string[] = [];
 
@@ -139,7 +142,7 @@ export async function processFilterRules(
     black: string[],
     warningMessages: string[]
   ]>>(
-    filterRulesUrl,
+    cacheKey(filterRulesUrl),
     async () => {
       const whitelistDomainSets = new Set<string>();
       const blacklistDomainSets = new Set<string>();
@@ -554,7 +557,7 @@ function parse($line: string, result: [string, ParseType]): [hostname: string, f
         : (lineEndsWithCaretVerticalBar ? -2 : undefined) // replace('^|', '')
     );
 
-    const suffix = tldts.getPublicSuffix(sliced);
+    const suffix = tldts.getPublicSuffix(sliced, looseTldtsOpt);
     if (!suffix) {
       // This exclude domain-like resource like `1.1.4.514.js`
       result[1] = ParseType.Null;
@@ -608,7 +611,7 @@ function parse($line: string, result: [string, ParseType]): [hostname: string, f
       }
 
       result[0] = `[parse-filter E0004] (black) invalid domain: ${JSON.stringify({
-        line, sliced, sliceStart, sliceEnd
+        line, sliced, sliceStart, sliceEnd, domain
       })}`;
       result[1] = ParseType.ErrorMessage;
       return result;
@@ -629,7 +632,7 @@ function parse($line: string, result: [string, ParseType]): [hostname: string, f
   ) {
     const _domain = line.slice(0, -1);
 
-    const suffix = tldts.getPublicSuffix(_domain);
+    const suffix = tldts.getPublicSuffix(_domain, looseTldtsOpt);
     if (!suffix) {
       // This exclude domain-like resource like `_social_tracking.js^`
       result[1] = ParseType.Null;
@@ -685,7 +688,7 @@ function parse($line: string, result: [string, ParseType]): [hostname: string, f
     sliceEnd = -9;
   }
   const sliced = (sliceStart !== 0 || sliceEnd !== undefined) ? line.slice(sliceStart, sliceEnd) : line;
-  const suffix = tldts.getPublicSuffix(sliced);
+  const suffix = tldts.getPublicSuffix(sliced, looseTldtsOpt);
   /**
    * Fast exclude definitely not domain-like resource
    *
@@ -708,7 +711,7 @@ function parse($line: string, result: [string, ParseType]): [hostname: string, f
     return result;
   }
 
-  result[0] = `[parse-filter E0010] can not parse: ${line}`;
+  result[0] = `[parse-filter ${tryNormalizeDomain === null ? 'E0010' : 'E0011'}] can not parse: ${JSON.stringify({ line, tryNormalizeDomain, sliced })}`;
   result[1] = ParseType.ErrorMessage;
   return result;
 }
