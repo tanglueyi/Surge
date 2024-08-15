@@ -93,7 +93,7 @@ const BLACK_TLD = new Set([
   'design'
 ]);
 
-export const WHITELIST_MAIN_DOMAINS = new Set([
+const WHITELIST_MAIN_DOMAINS = new Set([
   'w3s.link', // ipfs gateway
   'dweb.link', // ipfs gateway
   'nftstorage.link', // ipfs gateway
@@ -101,7 +101,8 @@ export const WHITELIST_MAIN_DOMAINS = new Set([
   'business.site', // Drag'n'Drop site building platform
   'page.link', // Firebase URL Shortener
   'notion.site',
-  'vercel.app'
+  'vercel.app',
+  'gitbook.io'
 ]);
 
 const sensitiveKeywords = createKeywordFilter([
@@ -161,7 +162,7 @@ export const getPhishingDomains = (parentSpan: Span) => parentSpan.traceChild('g
       }
 
       let sensitiveKeywordsHit: boolean | null = null;
-      if (tld.length < 7 && !BLACK_TLD.has(tld) && !(sensitiveKeywordsHit = sensitiveKeywords(line))) continue;
+      if (tld.length < 6 && !tld.includes('.') && !BLACK_TLD.has(tld) && !(sensitiveKeywordsHit = sensitiveKeywords(line))) continue;
 
       domainCountMap[apexDomain] ||= 0;
       domainCountMap[apexDomain] += calcDomainAbuseScore(line, subdomain, sensitiveKeywordsHit);
