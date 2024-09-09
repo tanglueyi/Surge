@@ -10,10 +10,11 @@ import { createMemoizedPromise } from './lib/memo-promise';
 import * as yaml from 'yaml';
 import { appendArrayInPlace } from './lib/append-array-in-place';
 import { output, writeFile } from './lib/misc';
+import { OUTPUT_INTERNAL_DIR, OUTPUT_MODULES_DIR, SOURCE_DIR } from './constants/dir';
 
 export const getDomesticAndDirectDomainsRulesetPromise = createMemoizedPromise(async () => {
-  const domestics = await readFileIntoProcessedArray(path.resolve(__dirname, '../Source/non_ip/domestic.conf'));
-  const directs = await readFileIntoProcessedArray(path.resolve(__dirname, '../Source/non_ip/direct.conf'));
+  const domestics = await readFileIntoProcessedArray(path.join(SOURCE_DIR, 'non_ip/domestic.conf'));
+  const directs = await readFileIntoProcessedArray(path.resolve(SOURCE_DIR, 'non_ip/direct.conf'));
   const lans: string[] = [];
 
   Object.entries(DOMESTICS).forEach(([, { domains }]) => {
@@ -48,7 +49,7 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
       new Date(),
       res[0],
       'ruleset',
-      ...output('domestic', 'non_ip')
+      output('domestic', 'non_ip')
     ),
     createRuleset(
       span,
@@ -61,7 +62,7 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
       new Date(),
       res[1],
       'ruleset',
-      ...output('direct', 'non_ip')
+      output('direct', 'non_ip')
     ),
     createRuleset(
       span,
@@ -74,7 +75,7 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
       new Date(),
       res[2],
       'ruleset',
-      ...output('lan', 'non_ip')
+      output('lan', 'non_ip')
     ),
     compareAndWriteFile(
       span,
@@ -91,10 +92,10 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
           ])
         ])
       ],
-      path.resolve(__dirname, '../Modules/sukka_local_dns_mapping.sgmodule')
+      path.resolve(OUTPUT_MODULES_DIR, 'sukka_local_dns_mapping.sgmodule')
     ),
     writeFile(
-      path.resolve(__dirname, '../Internal/clash_nameserver_policy.yaml'),
+      path.join(OUTPUT_INTERNAL_DIR, 'clash_nameserver_policy.yaml'),
       yaml.stringify(
         {
           dns: {

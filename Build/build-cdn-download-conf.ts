@@ -9,11 +9,11 @@ import { domainDeduper } from './lib/domain-deduper';
 import { appendArrayInPlace } from './lib/append-array-in-place';
 import { sortDomains } from './lib/stable-sort-domain';
 import { output } from './lib/misc';
+import { SOURCE_DIR } from './constants/dir';
 
 const getS3OSSDomainsPromise = (async (): Promise<string[]> => {
   const trie = createTrie(
     await getPublicSuffixListTextPromise(),
-    true,
     false
   );
 
@@ -58,9 +58,9 @@ export const buildCdnDownloadConf = task(require.main === module, __filename)(as
     steamDomainSet
   ] = await Promise.all([
     getS3OSSDomainsPromise,
-    readFileIntoProcessedArray(path.resolve(__dirname, '../Source/domainset/cdn.conf')),
-    readFileIntoProcessedArray(path.resolve(__dirname, '../Source/domainset/download.conf')),
-    readFileIntoProcessedArray(path.resolve(__dirname, '../Source/domainset/steam.conf'))
+    readFileIntoProcessedArray(path.join(SOURCE_DIR, 'domainset/cdn.conf')),
+    readFileIntoProcessedArray(path.join(SOURCE_DIR, 'domainset/download.conf')),
+    readFileIntoProcessedArray(path.join(SOURCE_DIR, 'domainset/steam.conf'))
   ]);
 
   appendArrayInPlace(downloadDomainSet, S3OSSDomains.map(domain => `.${domain}`));
@@ -78,7 +78,7 @@ export const buildCdnDownloadConf = task(require.main === module, __filename)(as
       new Date(),
       sortDomains(domainDeduper(cdnDomainsList)),
       'domainset',
-      ...output('cdn', 'domainset')
+      output('cdn', 'domainset')
     ),
     createRuleset(
       span,
@@ -91,7 +91,7 @@ export const buildCdnDownloadConf = task(require.main === module, __filename)(as
       new Date(),
       sortDomains(domainDeduper(downloadDomainSet)),
       'domainset',
-      ...output('download', 'domainset')
+      output('download', 'domainset')
     )
   ]);
 });
