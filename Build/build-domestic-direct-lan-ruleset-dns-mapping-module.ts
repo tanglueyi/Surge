@@ -3,14 +3,15 @@ import path from 'node:path';
 import { DOMESTICS } from '../Source/non_ip/domestic';
 import { DIRECTS, LANS } from '../Source/non_ip/direct';
 import { readFileIntoProcessedArray } from './lib/fetch-text-by-line';
-import { compareAndWriteFile, createRuleset } from './lib/create-file';
+import { compareAndWriteFile } from './lib/create-file';
 import { task } from './trace';
 import { SHARED_DESCRIPTION } from './lib/constants';
 import { createMemoizedPromise } from './lib/memo-promise';
 import * as yaml from 'yaml';
 import { appendArrayInPlace } from './lib/append-array-in-place';
-import { output, writeFile } from './lib/misc';
+import { writeFile } from './lib/misc';
 import { OUTPUT_INTERNAL_DIR, OUTPUT_MODULES_DIR, SOURCE_DIR } from './constants/dir';
+import { RulesetOutput } from './lib/create-file';
 
 export const getDomesticAndDirectDomainsRulesetPromise = createMemoizedPromise(async () => {
   const domestics = await readFileIntoProcessedArray(path.join(SOURCE_DIR, 'non_ip/domestic.conf'));
@@ -31,52 +32,40 @@ export const getDomesticAndDirectDomainsRulesetPromise = createMemoizedPromise(a
 });
 
 export const buildDomesticRuleset = task(require.main === module, __filename)(async (span) => {
-  const res = await getDomesticAndDirectDomainsRulesetPromise();
+  const [domestics, directs, lans] = await getDomesticAndDirectDomainsRulesetPromise();
 
   const dataset = Object.entries(DOMESTICS);
   appendArrayInPlace(dataset, Object.entries(DIRECTS));
   appendArrayInPlace(dataset, Object.entries(LANS));
 
   return Promise.all([
-    createRuleset(
-      span,
-      'Sukka\'s Ruleset - Domestic Domains',
-      [
+    new RulesetOutput(span, 'domestic', 'non_ip')
+      .withTitle('Sukka\'s Ruleset - Domestic Domains')
+      .withDescription([
         ...SHARED_DESCRIPTION,
         '',
         'This file contains known addresses that are avaliable in the Mainland China.'
-      ],
-      new Date(),
-      res[0],
-      'ruleset',
-      output('domestic', 'non_ip')
-    ),
-    createRuleset(
-      span,
-      'Sukka\'s Ruleset - Direct Rules',
-      [
+      ])
+      .addFromRuleset(domestics)
+      .write(),
+    new RulesetOutput(span, 'direct', 'non_ip')
+      .withTitle('Sukka\'s Ruleset - Direct Rules')
+      .withDescription([
         ...SHARED_DESCRIPTION,
         '',
         'This file contains domains and process that should not be proxied.'
-      ],
-      new Date(),
-      res[1],
-      'ruleset',
-      output('direct', 'non_ip')
-    ),
-    createRuleset(
-      span,
-      'Sukka\'s Ruleset - LAN',
-      [
+      ])
+      .addFromRuleset(directs)
+      .write(),
+    new RulesetOutput(span, 'lan', 'non_ip')
+      .withTitle('Sukka\'s Ruleset - LAN')
+      .withDescription([
         ...SHARED_DESCRIPTION,
         '',
         'This file includes rules for LAN DOMAIN and reserved TLDs.'
-      ],
-      new Date(),
-      res[2],
-      'ruleset',
-      output('lan', 'non_ip')
-    ),
+      ])
+      .addFromRuleset(lans)
+      .write(),
     compareAndWriteFile(
       span,
       [

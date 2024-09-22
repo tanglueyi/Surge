@@ -1,19 +1,20 @@
 import { task } from './trace';
-import { createRuleset } from './lib/create-file';
 import { fetchRemoteTextByLine } from './lib/fetch-text-by-line';
 import { createTrie } from './lib/trie';
 import { SHARED_DESCRIPTION } from './lib/constants';
 import { createMemoizedPromise } from './lib/memo-promise';
 import { extractDomainsFromFelixDnsmasq } from './lib/parse-dnsmasq';
-import { sortDomains } from './lib/stable-sort-domain';
-import { output } from './lib/misc';
+import { RulesetOutput } from './lib/create-file';
+import { appendArrayInPlace } from './lib/append-array-in-place';
 
 const PROBE_DOMAINS = ['.microsoft.com', '.windows.net', '.windows.com', '.windowsupdate.com', '.windowssearch.com', '.office.net'];
 
-const WHITELIST = [
-  'DOMAIN-SUFFIX,download.prss.microsoft.com',
-  'DOMAIN,res.cdn.office.net'
+const DOMAINS = [
+  'res.cdn.office.net',
+  'res-1.cdn.office.net',
+  'statics.teams.cdn.office.net'
 ];
+const DOMAIN_SUFFIXES = ['download.prss.microsoft.com'];
 
 const BLACKLIST = [
   'www.microsoft.com',
@@ -24,7 +25,7 @@ const BLACKLIST = [
   'windowsupdate.com'
 ];
 
-export const getMicrosoftCdnRulesetPromise = createMemoizedPromise(async () => {
+export const getMicrosoftCdnRulesetPromise = createMemoizedPromise<[domains: string[], domainSuffixes: string[]]>(async () => {
   // First trie is to find the microsoft domains that matches probe domains
   const trie = createTrie(null, false);
   for await (const line of await fetchRemoteTextByLine('https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf')) {
@@ -39,9 +40,12 @@ export const getMicrosoftCdnRulesetPromise = createMemoizedPromise(async () => {
   const trie2 = createTrie(foundMicrosoftCdnDomains, true);
   BLACKLIST.forEach(trie2.whitelist);
 
-  return sortDomains(trie2.dump())
-    .map(d => `DOMAIN-SUFFIX,${d}`)
-    .concat(WHITELIST);
+  const domains: string[] = DOMAINS;
+  const domainSuffixes: string[] = DOMAIN_SUFFIXES;
+
+  appendArrayInPlace(domainSuffixes, trie2.dump());
+
+  return [domains, domainSuffixes] as const;
 });
 
 export const buildMicrosoftCdn = task(require.main === module, __filename)(async (span) => {
@@ -54,15 +58,12 @@ export const buildMicrosoftCdn = task(require.main === module, __filename)(async
     ' - https://github.com/felixonmars/dnsmasq-china-list'
   ];
 
-  const res: string[] = await span.traceChildPromise('get microsoft cdn domains', getMicrosoftCdnRulesetPromise());
+  const [domains, domainSuffixes] = await span.traceChildPromise('get microsoft cdn domains', getMicrosoftCdnRulesetPromise());
 
-  return createRuleset(
-    span,
-    'Sukka\'s Ruleset - Microsoft CDN',
-    description,
-    new Date(),
-    res,
-    'ruleset',
-    output('microsoft_cdn', 'non_ip')
-  );
+  return new RulesetOutput(span, 'microsoft_cdn', 'non_ip')
+    .withTitle('Sukka\'s Ruleset - Microsoft CDN')
+    .withDescription(description)
+    .bulkAddDomain(domains)
+    .bulkAddDomainSuffix(domainSuffixes)
+    .write();
 });
