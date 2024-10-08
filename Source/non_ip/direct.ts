@@ -14,6 +14,14 @@ export interface DNSMapping {
 }
 
 export const DIRECTS = {
+  HOTSPOT_CAPTIVE_PORTAL: {
+    dns: 'system',
+    hosts: {},
+    domains: [
+      'securelogin.com.cn',
+      'captive.apple.com'
+    ]
+  },
   ROUTER: {
     dns: 'system',
     hosts: {},
@@ -93,7 +101,11 @@ export const DIRECTS = {
       'ts.net',
       // AdGuard
       '$injections.adguard.org',
-      '$local.adguard.org'
+      '$local.adguard.org',
+      // SetApp
+      'setapp.click',
+      // Android ADB
+      '_adb-tls-connect._tcp'
     ]
   }
 } satisfies Record<string, DNSMapping>;

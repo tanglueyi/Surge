@@ -145,8 +145,6 @@ const BILIBILI_INTL: StreamService = {
   rules: [
     'DOMAIN-SUFFIX,biliintl.com',
     'DOMAIN,apm-misaka.biliapi.net',
-    'DOMAIN,p.bstarstatic.com',
-    'DOMAIN,p-bstarstatic.akamaized.net',
     'DOMAIN,upos-bstar-mirrorakam.akamaized.net',
     'DOMAIN,upos-bstar1-mirrorakam.akamaized.net',
     'DOMAIN-SUFFIX,bilibili.tv',
@@ -557,6 +555,7 @@ const PARAMOUNT: StreamService = {
   name: 'Paramount+',
   rules: [
     'USER-AGENT,PPlus*',
+    'DOMAIN-SUFFIX,pluto.tv', // not paramount+, but does belong to the same company
     'DOMAIN-SUFFIX,cbsi.com',
     'DOMAIN-SUFFIX,cbsaavideo.com',
     'DOMAIN-SUFFIX,cbsivideo.com',

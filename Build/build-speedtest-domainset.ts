@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { Sema } from 'async-sema';
-import { getHostname } from 'tldts';
+import { getHostname } from 'tldts-experimental';
 import { task } from './trace';
 import { fetchWithRetry } from './lib/fetch-retry';
 import { SHARED_DESCRIPTION } from './lib/constants';
@@ -115,6 +115,7 @@ const PREDEFINE_DOMAINS = [
   '.wifiman.com',
   '.wifiman.me',
   '.wifiman.ubncloud.com',
+  '.wifiman-stability-test.ubncloud.com',
   // Fast.com
   '.fast.com',
   // MacPaw

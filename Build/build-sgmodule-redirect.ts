@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { task } from './trace';
 import { compareAndWriteFile } from './lib/create-file';
-import { getHostname } from 'tldts';
+import { getHostname } from 'tldts-experimental';
 import { isTruthy } from './lib/misc';
 import { OUTPUT_MODULES_DIR } from './constants/dir';
 
@@ -95,7 +95,10 @@ const REDIRECT_MIRROR_307 = [
   ['www.g.cn/', 'https://www.google.com/'],
   // avg.tv/sm114514 -> https://www.nicovideo.jp/watch/sm114514
   ['acg.tv/sm', 'https://www.nicovideo.jp/watch/sm'],
-  ['acg.tv/', 'https://b23.tv/']
+  ['acg.tv/', 'https://b23.tv/'],
+  // Minecraft Wiki
+  ['minecraft.fandom.com/wiki/', 'https://minecraft.wiki/w/'],
+  ['minecraft.fandom.com/', 'https://minecraft.wiki/']
 ];
 
 const REDIRECT_FAKEWEBSITES = [
