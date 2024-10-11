@@ -19,13 +19,21 @@ export const DIRECTS = {
     hosts: {},
     domains: [
       'securelogin.com.cn',
-      'captive.apple.com'
+      '$captive.apple.com'
     ]
   },
   ROUTER: {
     dns: 'system',
     hosts: {},
     domains: [
+      'home',
+      // 'zte.home', // ZTE CPE
+      // 'airbox.home',
+      // 'bthub.home',
+      // 'bthomehub.home',
+      // 'hitronhub.home',
+      // 'web.setup.home'
+
       // Aruba Router
       'instant.arubanetworks.com',
       'setmeup.arubanetworks.com',
@@ -47,27 +55,23 @@ export const DIRECTS = {
       'tplinkrepeater.net',
       // Xiaomi Router
       'miwifi.com',
-      // ZTE CPE
-      'zte.home',
+
       // UniFi
       '+ui.direct',
       '$unifi',
-      'amplifi.lan',
       // Other Router
       'hiwifi.com',
       'huaweimobilewifi.com',
-      'my.router',
-      'phicomm.me',
+      'router',
+      // 'my.router',
+      // 'samsung.router',
       'router.ctc',
       'peiluyou.com',
-      'airbox.home',
       'arcor.easybox',
       'aterm.me',
-      'bthub.home',
-      'bthomehub.home',
       'congstar.box',
       'connect.box',
-      'console.gl-inet.com',
+      // 'console.gl-inet.com',
       'easy.box',
       'etxr',
       'fritz.box',
@@ -75,7 +79,6 @@ export const DIRECTS = {
       'fritz.repeater',
       'giga.cube',
       'hi.link',
-      'hitronhub.home',
       'homerouter.cpe',
       'myfritz.box',
       'mobile.hotspot',
@@ -84,11 +87,9 @@ export const DIRECTS = {
       'plex.direct',
       'app.plex.tv',
       'routerlogin.com',
-      'samsung.router',
       'speedport.ip',
       'steamloopback.host',
-      'web.setup',
-      'web.setup.home'
+      'web.setup'
     ]
   },
   SYSTEM: {
@@ -103,7 +104,7 @@ export const DIRECTS = {
       '$injections.adguard.org',
       '$local.adguard.org',
       // SetApp
-      'setapp.click',
+      '$setapp.click',
       // Android ADB
       '_adb-tls-connect._tcp'
     ]
@@ -116,6 +117,7 @@ export const LANS = {
     hosts: {},
     domains: [
       'lan',
+      // 'amplifi.lan',
       '$localhost',
       'localdomain',
       'home.arpa',
@@ -125,16 +127,16 @@ export const LANS = {
       '17.172.in-addr.arpa',
       '18.172.in-addr.arpa',
       '19.172.in-addr.arpa',
-      '20.172.in-addr.arpa',
-      '21.172.in-addr.arpa',
-      '22.172.in-addr.arpa',
-      '23.172.in-addr.arpa',
-      '24.172.in-addr.arpa',
-      '25.172.in-addr.arpa',
-      '26.172.in-addr.arpa',
-      '27.172.in-addr.arpa',
-      '28.172.in-addr.arpa',
-      '29.172.in-addr.arpa',
+      '2?.172.in-addr.arpa',
+      // '21.172.in-addr.arpa',
+      // '22.172.in-addr.arpa',
+      // '23.172.in-addr.arpa',
+      // '24.172.in-addr.arpa',
+      // '25.172.in-addr.arpa',
+      // '26.172.in-addr.arpa',
+      // '27.172.in-addr.arpa',
+      // '28.172.in-addr.arpa',
+      // '29.172.in-addr.arpa',
       '30.172.in-addr.arpa',
       '31.172.in-addr.arpa',
       '168.192.in-addr.arpa',
