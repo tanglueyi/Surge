@@ -1,5 +1,5 @@
 import createDb from 'better-sqlite3';
-import type { Database } from 'better-sqlite3';
+import type { Database, Statement } from 'better-sqlite3';
 import os from 'node:os';
 import path from 'node:path';
 import { mkdirSync } from 'node:fs';
@@ -8,19 +8,13 @@ import { fastStringArrayJoin, identity, mergeHeaders } from './misc';
 import { performance } from 'node:perf_hooks';
 import fs from 'node:fs';
 import { stringHash } from './string-hash';
-import { defaultRequestInit, fetchWithLog, ResponseError } from './fetch-retry';
+import { defaultRequestInit, requestWithLog, ResponseError } from './fetch-retry';
+import type { UndiciResponseData } from './fetch-retry';
 // import type { UndiciResponseData } from './fetch-retry';
 import { Custom304NotModifiedError, CustomAbortError, CustomNoETagFallbackError, fetchAssetsWithout304, sleepWithAbort } from './fetch-assets';
 
-import type { Response } from 'undici';
 import type { IncomingHttpHeaders } from 'undici/types/header';
 import { Headers } from 'undici';
-
-const enum CacheStatus {
-  Hit = 'hit',
-  Stale = 'stale',
-  Miss = 'miss'
-}
 
 export interface CacheOptions<S = string> {
   /** Path to sqlite file dir */
@@ -43,7 +37,7 @@ interface CacheApplyNonRawOption<T, S> extends CacheApplyRawOption {
   deserializer: (cached: S) => T
 }
 
-type CacheApplyOption<T, S> = T extends S ? CacheApplyRawOption : CacheApplyNonRawOption<T, S>;
+export type CacheApplyOption<T, S> = T extends S ? CacheApplyRawOption : CacheApplyNonRawOption<T, S>;
 
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -86,7 +80,7 @@ function ensureETag(headers: IncomingHttpHeaders | Headers) {
 }
 
 export class Cache<S = string> {
-  db: Database;
+  private db: Database;
   /** Time before deletion */
   tbd = 60 * 1000;
   /** SQLite file path */
@@ -94,6 +88,13 @@ export class Cache<S = string> {
   /** Table name */
   tableName: string;
   type: S extends string ? 'string' : 'buffer';
+
+  private statement: {
+    updateTtl: Statement<[number, string]>,
+    del: Statement<[string]>,
+    insert: Statement<[unknown]>,
+    get: Statement<[string], { ttl: number, value: S }>
+  };
 
   constructor({
     cachePath = path.join(os.tmpdir() || '/tmp', 'hdc'),
@@ -124,6 +125,14 @@ export class Cache<S = string> {
     db.prepare(`CREATE TABLE IF NOT EXISTS ${this.tableName} (key TEXT PRIMARY KEY, value ${this.type === 'string' ? 'TEXT' : 'BLOB'}, ttl REAL NOT NULL);`).run();
     db.prepare(`CREATE INDEX IF NOT EXISTS cache_ttl ON ${this.tableName} (ttl);`).run();
 
+    /** cache stmt */
+    this.statement = {
+      updateTtl: db.prepare(`UPDATE ${this.tableName} SET ttl = ? WHERE key = ?;`),
+      del: db.prepare(`DELETE FROM ${this.tableName} WHERE key = ?`),
+      insert: db.prepare(`INSERT INTO ${this.tableName} (key, value, ttl) VALUES ($key, $value, $valid) ON CONFLICT(key) DO UPDATE SET value = $value, ttl = $valid`),
+      get: db.prepare(`SELECT ttl, value FROM ${this.tableName} WHERE key = ? LIMIT 1`)
+    } as const;
+
     const date = new Date();
 
     // perform purge on startup
@@ -148,13 +157,9 @@ export class Cache<S = string> {
   }
 
   set(key: string, value: string, ttl = 60 * 1000): void {
-    const insert = this.db.prepare(
-      `INSERT INTO ${this.tableName} (key, value, ttl) VALUES ($key, $value, $valid) ON CONFLICT(key) DO UPDATE SET value = $value, ttl = $valid`
-    );
-
     const valid = Date.now() + ttl;
 
-    insert.run({
+    this.statement.insert.run({
       $key: key,
       key,
       $value: value,
@@ -164,78 +169,41 @@ export class Cache<S = string> {
     });
   }
 
-  get(key: string, defaultValue?: S): S | undefined {
-    const rv = this.db.prepare<string, { value: S }>(
-      `SELECT value FROM ${this.tableName} WHERE key = ? LIMIT 1`
-    ).get(key);
+  get(key: string): S | null {
+    const rv = this.statement.get.get(key);
 
-    if (!rv) return defaultValue;
+    if (!rv) return null;
+
+    if (rv.ttl < Date.now()) {
+      this.del(key);
+      return null;
+    }
+
+    if (rv.value == null) {
+      this.del(key);
+      return null;
+    }
+
     return rv.value;
   }
 
-  has(key: string): CacheStatus {
-    const now = Date.now();
-    const rv = this.db.prepare<string, { ttl: number }>(`SELECT ttl FROM ${this.tableName} WHERE key = ?`).get(key);
-
-    return rv ? (rv.ttl > now ? CacheStatus.Hit : CacheStatus.Stale) : CacheStatus.Miss;
-  }
-
-  private updateTtl(key: string, ttl: number): void {
-    this.db.prepare(`UPDATE ${this.tableName} SET ttl = ? WHERE key = ?;`).run(Date.now() + ttl, key);
+  updateTtl(key: string, ttl: number): void {
+    this.statement.updateTtl.run(Date.now() + ttl, key);
   }
 
   del(key: string): void {
-    this.db.prepare(`DELETE FROM ${this.tableName} WHERE key = ?`).run(key);
-  }
-
-  async apply<T>(
-    key: string,
-    fn: () => Promise<T>,
-    opt: CacheApplyOption<T, S>
-  ): Promise<T> {
-    const { ttl, temporaryBypass, incrementTtlWhenHit } = opt;
-
-    if (temporaryBypass) {
-      return fn();
-    }
-    if (ttl == null) {
-      this.del(key);
-      return fn();
-    }
-
-    const cached = this.get(key);
-    if (cached == null) {
-      console.log(picocolors.yellow('[cache] miss'), picocolors.gray(key), picocolors.gray(`ttl: ${TTL.humanReadable(ttl)}`));
-
-      const serializer = 'serializer' in opt ? opt.serializer : identity as any;
-
-      const promise = fn();
-
-      return promise.then((value) => {
-        this.set(key, serializer(value), ttl);
-        return value;
-      });
-    }
-
-    console.log(picocolors.green('[cache] hit'), picocolors.gray(key));
-
-    if (incrementTtlWhenHit) {
-      this.updateTtl(key, ttl);
-    }
-
-    const deserializer = 'deserializer' in opt ? opt.deserializer : identity as any;
-    return deserializer(cached);
+    this.statement.del.run(key);
   }
 
   async applyWithHttp304<T>(
     url: string,
     extraCacheKey: string,
-    fn: (resp: Response) => Promise<T>,
+    fn: (resp: UndiciResponseData) => Promise<T>,
     opt: Omit<CacheApplyOption<T, S>, 'incrementTtlWhenHit'>
     // requestInit?: RequestInit
   ): Promise<T> {
     if (opt.temporaryBypass) {
-      return fn(await fetchWithLog(url));
+      return fn(await requestWithLog(url));
     }
 
     const baseKey = url + '$' + extraCacheKey;
@@ -244,7 +212,7 @@ export class Cache<S = string> {
 
     const etag = this.get(etagKey);
 
-    const onMiss = async (resp: Response) => {
+    const onMiss = async (resp: UndiciResponseData) => {
       const serializer = 'serializer' in opt ? opt.serializer : identity as any;
 
       const value = await fn(resp);
@@ -256,7 +224,7 @@ export class Cache<S = string> {
           serverETag = serverETag.replace('-gzip', '');
         }
 
-        console.log(picocolors.yellow('[cache] miss'), url, { status: resp.status, cachedETag: etag, serverETag });
+        console.log(picocolors.yellow('[cache] miss'), url, { status: resp.statusCode, cachedETag: etag, serverETag });
 
         this.set(etagKey, serverETag, TTL.ONE_WEEK_STATIC);
         this.set(cachedKey, serializer(value), TTL.ONE_WEEK_STATIC);
@@ -274,10 +242,10 @@ export class Cache<S = string> {
 
     const cached = this.get(cachedKey);
     if (cached == null) {
-      return onMiss(await fetchWithLog(url));
+      return onMiss(await requestWithLog(url));
     }
 
-    const resp = await fetchWithLog(
+    const resp = await requestWithLog(
       url,
       {
         ...defaultRequestInit,
@@ -288,11 +256,11 @@ export class Cache<S = string> {
     );
 
     // Only miss if previously a ETag was present and the server responded with a 304
-    if (!ensureETag(resp.headers) && resp.status !== 304) {
+    if (!ensureETag(resp.headers) && resp.statusCode !== 304) {
       return onMiss(resp);
     }
 
-    console.log(picocolors.green(`[cache] ${resp.status === 304 ? 'http 304' : 'cache hit'}`), picocolors.gray(url));
+    console.log(picocolors.green(`[cache] ${resp.statusCode === 304 ? 'http 304' : 'cache hit'}`), picocolors.gray(url));
     this.updateTtl(cachedKey, TTL.ONE_WEEK_STATIC);
 
     const deserializer = 'deserializer' in opt ? opt.deserializer : identity as any;
@@ -311,7 +279,7 @@ export class Cache<S = string> {
     }
 
     if (mirrorUrls.length === 0) {
-      return this.applyWithHttp304(primaryUrl, extraCacheKey, async (resp) => fn(await resp.text()), opt);
+      return this.applyWithHttp304(primaryUrl, extraCacheKey, async (resp) => fn(await resp.body.text()), opt);
     }
 
     const baseKey = primaryUrl + '$' + extraCacheKey;
@@ -338,7 +306,7 @@ export class Cache<S = string> {
       }
 
       const etag = this.get(getETagKey(url));
-      const res = await fetchWithLog(
+      const res = await requestWithLog(
         url,
         {
           signal: controller.signal,
@@ -354,7 +322,7 @@ export class Cache<S = string> {
         this.set(getETagKey(url), serverETag, TTL.ONE_WEEK_STATIC);
       }
       // If we do not have a cached value, we ignore 304
-      if (res.status === 304 && typeof previouslyCached === 'string' && previouslyCached.length > 1) {
+      if (res.statusCode === 304 && typeof previouslyCached === 'string' && previouslyCached.length > 1) {
         const err = new Custom304NotModifiedError(url, previouslyCached);
         controller.abort(err);
         throw err;
@@ -367,7 +335,7 @@ export class Cache<S = string> {
 
       // either no etag and not cached
       // or has etag but not 304
-      const text = await res.text();
+      const text = await res.body.text();
 
       if (text.length < 2) {
         throw new ResponseError(res, url, 'empty response');
@@ -415,6 +383,8 @@ export class Cache<S = string> {
           console.log(picocolors.red('[fetch error]'), picocolors.gray(error.url), error);
         }
       }
+
+      console.log({ e });
 
       console.log(`Download Rule for [${primaryUrl}] failed`);
       throw e;
