@@ -214,6 +214,7 @@ export const DOMESTICS: Record<string, DNSMapping> = {
     domains: [
       'bytedance.com.com',
       '+bytecdn.cn',
+      '+volccdn.com',
       '+toutiaoimg.com',
       '+toutiaoimg.cn',
       '+toutiaostatic.com',
