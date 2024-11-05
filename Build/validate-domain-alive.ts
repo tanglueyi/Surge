@@ -231,5 +231,6 @@ export async function runAgainstDomainset(filepath: string) {
     promises.push(isDomainAlive(line, line[0] === '.'));
   }
 
-  return Promise.all(promises);
+  await Promise.all(promises);
+  console.log('[done]', filepath);
 }
