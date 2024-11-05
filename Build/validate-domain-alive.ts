@@ -106,7 +106,6 @@ async function isApexDomainAlive(apexDomain: string): Promise<[string, boolean]>
   const resp = await resolve(apexDomain, 'NS');
 
   if (resp.answers.length > 0) {
-    console.log(picocolors.green('[domain alive]'), 'NS record', apexDomain);
     return [apexDomain, true];
   }
 
@@ -121,13 +120,12 @@ async function isApexDomainAlive(apexDomain: string): Promise<[string, boolean]>
 
   if (Object.keys(whois).length > 0) {
     // TODO: this is a workaround for https://github.com/LayeredStudio/whoiser/issues/117
-    if ('text' in whois && (whois.text as string[]).some(value => value.includes('No match for'))) {
+    if ('text' in whois && Array.isArray(whois.text) && whois.text.some(value => value.includes('No match for'))) {
       console.log(picocolors.red('[domain dead]'), 'whois no match', { domain: apexDomain });
       domainAliveMap.set(apexDomain, false);
       return [apexDomain, false];
     }
 
-    console.log(picocolors.green('[domain alive]'), 'recorded in whois', apexDomain);
     return [apexDomain, true];
   }
 
