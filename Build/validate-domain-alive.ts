@@ -211,9 +211,10 @@ export async function runAgainstRuleset(filepath: string) {
       case 'DOMAIN-SUFFIX':
       case 'DOMAIN': {
         promises.push(keyedAsyncMutexWithQueue(domain, () => isDomainAlive(domain, type === 'DOMAIN-SUFFIX')));
-
-        break;
+        continue;
       }
+      default:
+        continue;
       // no default
       // case 'DOMAIN-KEYWORD': {
       //   break;
