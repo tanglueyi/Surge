@@ -29,15 +29,14 @@ const dohServers: Array<[string, DNS2.DnsResolver]> = ([
   // '76.76.2.0', // ControlD unfiltered, path not /dns-query
   // '76.76.10.0', // ControlD unfiltered, path not /dns-query
   // 'dns.bebasid.com', // BebasID, path not /dns-query but /unfiltered
-  '193.110.81.0', // dns0.eu
-  '185.253.5.0', // dns0.eu
+  // '193.110.81.0', // dns0.eu
+  // '185.253.5.0', // dns0.eu
   'dns.nextdns.io',
   'anycast.dns.nextdns.io',
   'wikimedia-dns.org',
   // 'ordns.he.net',
   'dns.mullvad.net',
   'zero.dns0.eu',
-  '193.110.81.0',
   'basic.rethinkdns.com'
   // 'ada.openbld.net',
   // 'dns.rabbitdns.org'
