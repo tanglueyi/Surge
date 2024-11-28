@@ -1,3 +1,5 @@
+import { TransformStream } from 'node:stream/web';
+
 export function processLine(line: string): string | null {
   if (!line) {
     return null;
@@ -39,17 +41,6 @@ export function processLine(line: string): string | null {
   }
 
   return trimmed;
-}
-
-export async function processLineFromReadline(rl: AsyncIterable<string>): Promise<string[]> {
-  const res: string[] = [];
-  for await (const line of rl) {
-    const l: string | null = processLine(line);
-    if (l) {
-      res.push(l);
-    }
-  }
-  return res;
 }
 
 export class ProcessLineStream extends TransformStream<string, string> {
