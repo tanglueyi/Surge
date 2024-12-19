@@ -1,6 +1,6 @@
 // @ts-check
 import path from 'node:path';
-import { DOMESTICS, DOH_BOOTSTRAP } from '../Source/non_ip/domestic';
+import { DOMESTICS, DOH_BOOTSTRAP, AdGuardHomeDNSMapping } from '../Source/non_ip/domestic';
 import { DIRECTS, LAN } from '../Source/non_ip/direct';
 import type { DNSMapping } from '../Source/non_ip/direct';
 import { readFileIntoProcessedArray } from './lib/fetch-text-by-line';
@@ -186,12 +186,20 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
       span,
       [
         '# Local DNS Mapping for AdGuard Home',
-        '',
+        'tls://1.12.12.12',
+        'tls://120.53.53.53',
+        'https://1.12.12.12/dns-query',
+        'https://120.53.53.53/dns-query',
         '[//]udp://10.10.1.1:53',
-        ...dataset.flatMap(({ domains, dns: _dns }) => domains.flatMap((domain) => {
-          const dns = _dns === 'system'
-            ? 'udp://10.10.1.1:53'
-            : _dns;
+        ...(([DOMESTICS, DIRECTS] as const).flatMap(Object.values) as DNSMapping[]).flatMap(({ domains, dns: _dns }) => domains.flatMap((domain) => {
+          let dns;
+          if (_dns in AdGuardHomeDNSMapping) {
+            dns = AdGuardHomeDNSMapping[_dns as keyof typeof AdGuardHomeDNSMapping].join(' ');
+          } else {
+            console.warn(`Unknown DNS "${_dns}" not in AdGuardHomeDNSMapping`);
+            dns = _dns;
+          }
+
           if (
             // AdGuard Home has built-in AS112 / private PTR handling
             domain.endsWith('.arpa')
