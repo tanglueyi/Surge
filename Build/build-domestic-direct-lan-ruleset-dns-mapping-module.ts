@@ -191,7 +191,7 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
         'https://1.12.12.12/dns-query',
         'https://120.53.53.53/dns-query',
         '[//]udp://10.10.1.1:53',
-        ...(([DOMESTICS, DIRECTS, LAN] as const).flatMap(Object.values) as DNSMapping[]).flatMap(({ domains, dns: _dns }) => domains.flatMap((domain) => {
+        ...(([DOMESTICS, DIRECTS] as const).flatMap(Object.values) as DNSMapping[]).flatMap(({ domains, dns: _dns }) => domains.flatMap((domain) => {
           let dns;
           if (_dns in AdGuardHomeDNSMapping) {
             dns = AdGuardHomeDNSMapping[_dns as keyof typeof AdGuardHomeDNSMapping].join(' ');
@@ -200,14 +200,14 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
             dns = _dns;
           }
 
-          // if (
-          //   // AdGuard Home has built-in AS112 / private PTR handling
-          //   domain.endsWith('.arpa')
-          //   // Ignore simple hostname
-          //   || !domain.includes('.')
-          // ) {
-          //   return [];
-          // }
+          if (
+            // AdGuard Home has built-in AS112 / private PTR handling
+            domain.endsWith('.arpa')
+            // Ignore simple hostname
+            || !domain.includes('.')
+          ) {
+            return [];
+          }
           if (domain[0] === '$') {
             return [
               `[/${domain.slice(1)}/]${dns}`
