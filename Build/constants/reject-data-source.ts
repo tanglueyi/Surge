@@ -30,25 +30,25 @@ export const HOSTS_EXTRA: HostsSource[] = [
 export const DOMAIN_LISTS: HostsSource[] = [
   // CoinBlockerList
   // Although the hosts file is still actively maintained, the hosts_browser file is not updated since 2024-03, so we set a 14 days cache ttl
-  [
-    'https://zerodot1.gitlab.io/CoinBlockerLists/list_browser.txt',
-    [
-      'https://proxy.cdn.skk.moe/?https://zerodot1.gitlab.io/CoinBlockerLists/list_browser.txt'
-    ],
-    true,
-    TTL.TWO_WEEKS()
-  ]
+  // [
+  //   'https://zerodot1.gitlab.io/CoinBlockerLists/list_browser.txt',
+  //   [
+  //     'https://proxy.cdn.skk.moe/?https://zerodot1.gitlab.io/CoinBlockerLists/list_browser.txt'
+  //   ],
+  //   true,
+  //   TTL.TWO_WEEKS()
+  // ]
 ];
 
 export const DOMAIN_LISTS_EXTRA: HostsSource[] = [
   // CoinBlockerList - Full
   // Lat update 10 months ago, so we set a 14 days cache ttl
-  [
-    'https://zerodot1.gitlab.io/CoinBlockerLists/list.txt',
-    ['https://proxy.cdn.skk.moe/?https://zerodot1.gitlab.io/CoinBlockerLists/list.txt'],
-    true,
-    TTL.TWO_WEEKS()
-  ],
+  // [
+  //   'https://zerodot1.gitlab.io/CoinBlockerLists/list.txt',
+  //   ['https://proxy.cdn.skk.moe/?https://zerodot1.gitlab.io/CoinBlockerLists/list.txt'],
+  //   true,
+  //   TTL.TWO_WEEKS()
+  // ],
 
   // BarbBlock
   // The barbblock list has never been updated since 2019-05, so we set a 14 days cache ttl
@@ -280,7 +280,7 @@ export const ADGUARD_FILTERS_EXTRA: AdGuardFilterSource[] = [
   //   'https://ublockorigin.github.io/uAssetsCDN/filters/resource-abuse.txt',
   //   ['https://ublockorigin.pages.dev/filters/resource-abuse.txt']
   // ],
-  // uBlock Origin Annoyances
+  // uBlock Origin Annoyances (the un-merged of Fanboy Annoyances List)
   [
     'https://ublockorigin.github.io/uAssetsCDN/filters/annoyances.min.txt',
     ['https://ublockorigin.pages.dev/filters/annoyances.min.txt'],
@@ -291,13 +291,6 @@ export const ADGUARD_FILTERS_EXTRA: AdGuardFilterSource[] = [
     'https://ublockorigin.github.io/uAssetsCDN/thirdparties/easylist-annoyances.txt',
     ['https://ublockorigin.pages.dev/thirdparties/easylist-annoyances.txt'],
     TTL.THREE_HOURS()
-  ],
-  // Dandelion Sprout's Annoyances
-  [
-    'https://filters.adtidy.org/extension/ublock/filters/250_optimized.txt',
-    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/250_optimized.txt'],
-    TTL.THREE_HOURS(),
-    true
   ],
   // EasyList - Newsletters
   [
@@ -319,6 +312,22 @@ export const ADGUARD_FILTERS_EXTRA: AdGuardFilterSource[] = [
       'https://secure.fanboy.co.nz/fanboy-cookiemonster_ubo.txt'
     ],
     TTL.TWLVE_HOURS()
+  ],
+  // Dandelion Sprout's Annoyances
+  [
+    'https://filters.adtidy.org/extension/ublock/filters/250_optimized.txt',
+    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/250_optimized.txt'],
+    TTL.THREE_HOURS(),
+    true
+  ],
+  // Adblock Warning Removal List
+  [
+    'https://easylist-downloads.adblockplus.org/antiadblockfilters.txt',
+    [
+      'https://filters.adtidy.org/extension/ublock/filters/207_optimized.txt'
+    ],
+    TTL.TWLVE_HOURS(),
+    true
   ]
 ];
 
@@ -456,9 +465,12 @@ export const PREDEFINED_WHITELIST = [
   '.host.secureserver.net', // rDNS .64.149.167.72.host.secureserver.net,
   '.ip.linodeusercontent.com', // rDNS 45-79-169-153.ip.linodeusercontent.com
   '.static.akamaitechnologies.com', // rDNS a23-57-90-107.deploy.static.akamaitechnologies.com
+  '.compute.amazonaws.com', // rDNS ec2-3-22-96-128.us-east-2.compute.amazonaws.com
   '.shoppy.gg', // Spam404
   'transcend-cdn.com', // AdGuard Annoyances
   'store1.gofile.io', // Dandelion Sprout's Annoyances List
   'ad.12306.cn', // https://github.com/jdlingyu/ad-wars
-  '.ib.snssdk.com' // AdGuard Tracking Protection -- breaks 今日头条专业版
+  '.ib.snssdk.com', // AdGuard Tracking Protection -- breaks 今日头条专业版
+  '.expobarrio.com', // domain expired
+  '.hamdandates.com' // domain expired
 ];
