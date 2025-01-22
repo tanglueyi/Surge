@@ -112,6 +112,8 @@ const lowKeywords = createKeywordFilter([
   'banking'
 ]);
 
+const rOneDotOnly = /^[^.]+\.[^.]+$/;
+
 const processPhihsingDomains = cache(function processPhihsingDomains(domainArr: string[]): string[] {
   const domainCountMap = new Map<string, number>();
   const domainScoreMap: Record<string, number> = {};
@@ -119,7 +121,7 @@ const processPhihsingDomains = cache(function processPhihsingDomains(domainArr: 
   let line = '';
   let tld: string | null = '';
   let apexDomain: string | null = '';
-  let subdomain: string | null = '';
+  let subdomain: string | null = null;
 
   // const set = new Set<string>();
   // let duplicateCount = 0;
@@ -127,19 +129,20 @@ const processPhihsingDomains = cache(function processPhihsingDomains(domainArr: 
   for (let i = 0, len = domainArr.length; i < len; i++) {
     line = domainArr[i];
 
-    // if (set.has(line)) {
-    //   duplicateCount++;
-    // } else {
-    //   set.add(line);
-    // }
+    if (rOneDotOnly.test(line)) {
+      tld = tldts.getPublicSuffix(line, loosTldOptWithPrivateDomains);
+      apexDomain = line;
+      subdomain = null;
+    } else {
+      const parsed = tldts.parse(line, loosTldOptWithPrivateDomains);
+      if (parsed.isPrivate) {
+        continue;
+      }
 
-    const parsed = tldts.parse(line, loosTldOptWithPrivateDomains);
-    if (parsed.isPrivate) {
-      continue;
+      tld = parsed.publicSuffix;
+      apexDomain = parsed.domain;
+      subdomain = parsed.subdomain;
     }
-
-    tld = parsed.publicSuffix;
-    apexDomain = parsed.domain;
 
     if (!tld) {
       console.log(picocolors.yellow('[phishing domains] E0001'), 'missing tld', { line, tld });
@@ -168,8 +171,6 @@ const processPhihsingDomains = cache(function processPhihsingDomains(domainArr: 
         domainScoreMap[apexDomain] += 0.5;
       }
     }
-
-    subdomain = parsed.subdomain;
 
     if (
       subdomain
