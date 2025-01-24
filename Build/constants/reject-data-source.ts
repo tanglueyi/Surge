@@ -3,7 +3,6 @@ export const DEBUG_DOMAIN_TO_FIND: string | null = null; // example.com | null
 type HostsSource = [main: string, mirrors: string[] | null, includeAllSubDomain: boolean];
 
 export const HOSTS: HostsSource[] = [
-  // have not been updated for more than a year, so we set a 14 days cache ttl
   ['https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt', null, true],
   ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Xiaomi-Extension.txt', null, false],
   ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Huawei-AdBlock.txt', null, false]
@@ -141,14 +140,6 @@ export const ADGUARD_FILTERS: AdGuardFilterSource[] = [
       'https://filters.adtidy.org/extension/ublock/filters/118_optimized.txt'
     ]
   ],
-  // AdGuard DNS Filter
-  [
-    'https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt',
-    [
-      'https://filters.adtidy.org/extension/ublock/filters/15_optimized.txt',
-      'https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt'
-    ]
-  ],
   // AdGuard Base Filter
   [
     'https://filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt',
@@ -187,6 +178,20 @@ export const ADGUARD_FILTERS: AdGuardFilterSource[] = [
       'https://ublockorigin.pages.dev/filters/unbreak.min.txt'
     ]
   ]
+  //
+  // [
+  //   'https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareAdGuardHome.txt',
+  //   [
+  //     'https://adguardteam.github.io/HostlistsRegistry/assets/filter_12.txt'
+  //   ]
+  // ]
+  // Stalkerware
+  // [
+  //   'https://raw.githubusercontent.com/AssoEchap/stalkerware-indicators/master/generated/hosts',
+  //   [
+  //     'https://adguardteam.github.io/HostlistsRegistry/assets/filter_31.txt'
+  //   ]
+  // ]
 ];
 
 export const ADGUARD_FILTERS_WHITELIST: AdGuardFilterSource[] = [
@@ -205,6 +210,16 @@ export const ADGUARD_FILTERS_WHITELIST: AdGuardFilterSource[] = [
 ];
 
 export const ADGUARD_FILTERS_EXTRA: AdGuardFilterSource[] = [
+  // AdGuard DNS Filter
+  // way too many other countries' domains (JP, Spanish, RU, VN, Turkish, Ukarainian, Dutch, etc.)
+  // EasyList, EasyPrivacy, Chinese and general filters are already included in base data source
+  [
+    'https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt',
+    [
+      'https://filters.adtidy.org/extension/ublock/filters/15_optimized.txt',
+      'https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt'
+    ]
+  ],
   // no coin list adguard list is more maintained than its hosts
   ['https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt', [], true],
   // AdGuard Annoyances filter
@@ -384,7 +399,6 @@ export const PREDEFINED_WHITELIST = [
   '.ip6-allhosts',
   '.mcastprefix',
   '.skk.moe',
-  '.cdn.cloudflare.net', // Surge/Clash doesn't support CNAME
   'analytics.google.com',
   '.cloud.answerhub.com',
   'ae01.alicdn.com',
@@ -450,6 +464,12 @@ export const PREDEFINED_WHITELIST = [
   '.lcy.llnw.net', // There is no point in adding these, many subdomains are dead anyway
   'repo.huaweicloud.com', // urlhaus
   '.hubspotlinks.com', // Peter Lowe Hosts
+  'cldup.com', // OSINT
+
+  // Doesn't make sense: CNAME domains
+  '.cdn.cloudflare.net',
+  '.apple-dns.net',
+  '.data.microsoft.com.akadns.net',
 
   // Expired domains
   '.expobarrio.com',
