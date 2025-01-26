@@ -20,7 +20,7 @@ export const HOSTS_EXTRA: HostsSource[] = [
   // Dan Pollock's hosts file, 0.0.0.0 version is 30 KiB smaller
   [
     'https://someonewhocares.org/hosts/zero/hosts',
-    ['https://proxy.cdn.skk.moe/?https://someonewhocares.org/hosts/zero/hosts'],
+    ['https://proxy.cdn.skk.moe/https/someonewhocares.org/hosts/zero/hosts'],
     true
 
   ],
@@ -143,22 +143,22 @@ export const ADGUARD_FILTERS: AdGuardFilterSource[] = [
   // AdGuard Base Filter
   [
     'https://filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt',
-    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt']
+    ['https://proxy.cdn.skk.moe/https/filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt']
   ],
   // AdGuard Mobile AD
   [
     'https://filters.adtidy.org/extension/ublock/filters/11_optimized.txt',
-    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt']
+    ['https://proxy.cdn.skk.moe/https/filters.adtidy.org/extension/ublock/filters/2_without_easylist.txt']
   ],
   // AdGuard Tracking Protection
   [
     'https://filters.adtidy.org/extension/ublock/filters/3_optimized.txt',
-    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/3_optimized.txt']
+    ['https://proxy.cdn.skk.moe/https/filters.adtidy.org/extension/ublock/filters/3_optimized.txt']
   ],
   // AdGuard Chinese filter (EasyList China + AdGuard Chinese filter)
   [
     'https://filters.adtidy.org/extension/ublock/filters/224_optimized.txt',
-    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/224_optimized.txt']
+    ['https://proxy.cdn.skk.moe/https/filters.adtidy.org/extension/ublock/filters/224_optimized.txt']
   ],
   // GameConsoleAdblockList
   // Update almost once per 1 to 3 months, let's set a 10 days cache ttl
@@ -225,7 +225,7 @@ export const ADGUARD_FILTERS_EXTRA: AdGuardFilterSource[] = [
   // AdGuard Annoyances filter
   [
     'https://filters.adtidy.org/extension/ublock/filters/14_optimized.txt',
-    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/14_optimized.txt'],
+    ['https://proxy.cdn.skk.moe/https/filters.adtidy.org/extension/ublock/filters/14_optimized.txt'],
     true
   ],
   // AdGuard Cookie Notices, included in Annoyances filter
@@ -241,7 +241,7 @@ export const ADGUARD_FILTERS_EXTRA: AdGuardFilterSource[] = [
   // AdGuard Japanese filter
   [
     'https://filters.adtidy.org/extension/ublock/filters/7_optimized.txt',
-    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/7_optimized.txt']
+    ['https://proxy.cdn.skk.moe/https/filters.adtidy.org/extension/ublock/filters/7_optimized.txt']
 
   ],
   // uBlock Origin Filter List
@@ -306,7 +306,7 @@ export const ADGUARD_FILTERS_EXTRA: AdGuardFilterSource[] = [
   // Dandelion Sprout's Annoyances
   [
     'https://filters.adtidy.org/extension/ublock/filters/250_optimized.txt',
-    ['https://proxy.cdn.skk.moe/?https://filters.adtidy.org/extension/ublock/filters/250_optimized.txt'],
+    ['https://proxy.cdn.skk.moe/https/filters.adtidy.org/extension/ublock/filters/250_optimized.txt'],
     true
   ],
   // Adblock Warning Removal List
