@@ -1,6 +1,7 @@
 import tldts from 'tldts-experimental';
 import { looseTldtsOpt } from '../constants/loose-tldts-opt';
 import picocolors from 'picocolors';
+import { pickRandom, pickOne } from 'foxts/pick-random';
 
 import DNS2 from 'dns2';
 import asyncRetry from 'async-retry';
@@ -54,6 +55,7 @@ const dohServers: Array<[string, DNS2.DnsResolver]> = ([
   'dns.nextdns.io',
   'anycast.dns.nextdns.io',
   'wikimedia-dns.org',
+  'puredns.org',
   // 'ordns.he.net',
   // 'dns.mullvad.net',
   'basic.rethinkdns.com',
@@ -81,31 +83,26 @@ const domesticDohServers: Array<[string, DNS2.DnsResolver]> = ([
   })
 ] as const);
 
-function createResolve(server: Array<[string, DNS2.DnsResolver]>): DNS2.DnsResolver<DnsResponse> {
-  return async (...args) => {
-    try {
-      return await asyncRetry(async () => {
-        const [dohServer, dohClient] = server[Math.floor(Math.random() * server.length)];
+async function $resolve(name: string, type: DNS2.PacketQuestion, server: [string, DNS2.DnsResolver]) {
+  try {
+    return await asyncRetry(async () => {
+      const [dohServer, dohClient] = server;
 
-        try {
-          return {
-            ...await dohClient(...args),
-            dns: dohServer
-          } satisfies DnsResponse;
-        } catch (e) {
-          // console.error(e);
-          throw new DnsError((e as Error).message, dohServer);
-        }
-      }, { retries: 5 });
-    } catch (e) {
-      console.log('[doh error]', ...args, e);
-      throw e;
-    }
-  };
+      try {
+        return {
+          ...await dohClient(name, type),
+          dns: dohServer
+        } satisfies DnsResponse;
+      } catch (e) {
+        // console.error(e);
+        throw new DnsError((e as Error).message, dohServer);
+      }
+    }, { retries: 5 });
+  } catch (e) {
+    console.log('[doh error]', name, type, e);
+    throw e;
+  }
 }
-
-const resolve = createResolve(dohServers);
-const domesticResolve = createResolve(domesticDohServers);
 
 async function getWhois(domain: string) {
   return asyncRetry(() => whoiser.domain(domain, { raw: true }), { retries: 5 });
@@ -146,9 +143,10 @@ export async function isDomainAlive(domain: string, isSuffix: boolean): Promise<
   const aaaaDns: string[] = [];
 
   // test 2 times before make sure record is empty
+  const servers = pickRandom(dohServers, 2);
   for (let i = 0; i < 2; i++) {
     // eslint-disable-next-line no-await-in-loop -- sequential
-    const aRecords = (await resolve($domain, 'A'));
+    const aRecords = (await $resolve($domain, 'A', servers[i]));
     if (aRecords.answers.length > 0) {
       return onDomainAlive(domain);
     }
@@ -157,7 +155,7 @@ export async function isDomainAlive(domain: string, isSuffix: boolean): Promise<
   }
   for (let i = 0; i < 2; i++) {
     // eslint-disable-next-line no-await-in-loop -- sequential
-    const aaaaRecords = (await resolve($domain, 'AAAA'));
+    const aaaaRecords = (await $resolve($domain, 'AAAA', servers[i]));
     if (aaaaRecords.answers.length > 0) {
       return onDomainAlive(domain);
     }
@@ -166,13 +164,13 @@ export async function isDomainAlive(domain: string, isSuffix: boolean): Promise<
   }
 
   // only then, let's test once with domesticDohServers
-  const aRecords = (await domesticResolve($domain, 'A'));
+  const aRecords = (await $resolve($domain, 'A', pickOne(domesticDohServers)));
   if (aRecords.answers.length > 0) {
     return onDomainAlive(domain);
   }
   aDns.push(aRecords.dns);
 
-  const aaaaRecords = (await domesticResolve($domain, 'AAAA'));
+  const aaaaRecords = (await $resolve($domain, 'AAAA', pickOne(domesticDohServers)));
   if (aaaaRecords.answers.length > 0) {
     return onDomainAlive(domain);
   }
@@ -182,23 +180,36 @@ export async function isDomainAlive(domain: string, isSuffix: boolean): Promise<
   return onDomainDead($domain);
 }
 
-const apexDomainNsResolvePromiseMap = new Map<string, Promise<DnsResponse>>();
+const apexDomainNsResolvePromiseMap = new Map<string, Promise<boolean>>();
+
+async function getNS(domain: string) {
+  const servers = pickRandom(dohServers, 2);
+  for (let i = 0, len = servers.length; i < len; i++) {
+    const server = servers[i];
+    // eslint-disable-next-line no-await-in-loop -- one by one
+    const resp = await $resolve(domain, 'NS', server);
+    if (resp.answers.length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
 
 async function isApexDomainAlive(apexDomain: string): Promise<[string, boolean]> {
   if (domainAliveMap.has(apexDomain)) {
     return [apexDomain, domainAliveMap.get(apexDomain)!];
   }
 
-  let resp: DnsResponse;
+  let hasNS: boolean;
   if (apexDomainNsResolvePromiseMap.has(apexDomain)) {
-    resp = await apexDomainNsResolvePromiseMap.get(apexDomain)!;
+    hasNS = await apexDomainNsResolvePromiseMap.get(apexDomain)!;
   } else {
-    const promise = resolve(apexDomain, 'NS');
+    const promise = getNS(apexDomain);
     apexDomainNsResolvePromiseMap.set(apexDomain, promise);
-    resp = await promise;
+    hasNS = await promise;
   }
 
-  if (resp.answers.length > 0) {
+  if (hasNS) {
     return onDomainAlive(apexDomain);
   }
 
