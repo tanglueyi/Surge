@@ -20,21 +20,21 @@ export const HOSTS_EXTRA: HostsSource[] = [
     'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext',
     ['https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/thirdparties/pgl.yoyo.org/as/serverlist'],
     true
-
   ],
   // Dan Pollock's hosts file, 0.0.0.0 version is 30 KiB smaller
   [
     'https://someonewhocares.org/hosts/zero/hosts',
     ['https://proxy.cdn.skk.moe/https/someonewhocares.org/hosts/zero/hosts'],
     true
-
   ],
   // ad-wars is not actively maintained since 2023.11, so we use jsDelivr as primary URL
   [
     'https://cdn.jsdelivr.net/gh/jdlingyu/ad-wars@master/hosts',
     ['https://raw.githubusercontent.com/jdlingyu/ad-wars/master/hosts'],
     false
-  ]
+  ],
+  // hoshsadiq adblock-nocoin-list extra
+  ['https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt', [], true]
 ];
 
 export const DOMAIN_LISTS: HostsSource[] = [
@@ -79,13 +79,15 @@ export const DOMAIN_LISTS_EXTRA: HostsSource[] = [
     ],
     true
   ],
-  [
-    'https://cdn.jsdelivr.net/gh/AdguardTeam/cname-trackers@master/data/combined_disguised_clickthroughs_justdomains.txt',
-    [
-      'https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_clickthroughs_justdomains.txt'
-    ],
-    true
-  ],
+  // Disable clickthrough set. Many mail SaaS uses this kind of technique on their links (even normal links)
+  // E.g. links.strava.com
+  // [
+  //   'https://cdn.jsdelivr.net/gh/AdguardTeam/cname-trackers@master/data/combined_disguised_clickthroughs_justdomains.txt',
+  //   [
+  //     'https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_disguised_clickthroughs_justdomains.txt'
+  //   ],
+  //   true
+  // ],
   [
     'https://cdn.jsdelivr.net/gh/AdguardTeam/cname-trackers@master/data/combined_disguised_microsites_justdomains.txt',
     [
@@ -512,6 +514,7 @@ export const PREDEFINED_WHITELIST = [
   '.hubspotlinks.com', // Peter Lowe Hosts
   'cldup.com', // OSINT
   'cuty.io', // short domain like bitly, blocked by phishing army
+  'links.strava.com', // AdGuard CNAME Clickthrough Filters
 
   // Doesn't make sense: CNAME domains
   '.cdn.cloudflare.net',

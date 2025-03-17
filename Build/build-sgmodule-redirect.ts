@@ -58,7 +58,7 @@ const REDIRECT_MIRROR_HEADER = [
   ['cdn.jsdmirror.cn/', 'https://cdn.jsdelivr.net/'],
   // onmicrosoft.cn
   ['jsd.onmicrosoft.cn/', 'https://cdn.jsdelivr.net/'],
-  ['npm.onmicrosoft.cn/', 'https://unpkg.com/'],
+  ['npm.onmicrosoft.cn/', 'https://cdn.jsdelivr.net/npm/'],
   ['cdnjs.onmicrosoft.cn/', 'https://cdnjs.cloudflare.com/ajax/libs/'],
   // KGitHub
   ['raw.kgithub.com/', 'https://raw.githubusercontent.com/'],
@@ -88,6 +88,8 @@ const REDIRECT_MIRROR_HEADER = [
   ['cdn.bootcdn.net/', 'https://cdnjs.cloudflare.com/ajax/libs/'],
   ['cdn.staticfile.net/', 'https://cdnjs.cloudflare.com/ajax/libs/'],
   ['cdn.staticfile.org/', 'https://cdnjs.cloudflare.com/ajax/libs/'],
+  // The UNPKG has not been actively maintained and is finally down (https://github.com/unpkg/unpkg/issues/412)
+  ['unpkg.com/', 'https://cdn.jsdelivr.net/npm/'],
   // Misc
   ['pics.javbus.com/', 'https://i0.wp.com/pics.javbus.com/']
 ] as const;
