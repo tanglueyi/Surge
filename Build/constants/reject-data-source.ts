@@ -54,10 +54,10 @@ export const DOMAIN_LISTS_EXTRA: HostsSource[] = [
   // instead we maintain a list of our own
 
   // BarbBlock
-  // The barbblock list has never been updated since 2019-05, so we set a 14 days cache ttl
+  // The barbblock list has never been updated since ~~2019-05~~ 2023-10, so we use jsdelivr instead
   [
-    'https://paulgb.github.io/BarbBlock/blacklists/domain-list.txt',
-    ['https://raw.githubusercontent.com/paulgb/BarbBlock/refs/heads/main/blacklists/domain-list.txt'],
+    'https://cdn.jsdelivr.net/gh/paulgb/BarbBlock@main/blacklists/domain-list.txt',
+    ['https://paulgb.github.io/BarbBlock/blacklists/domain-list.txt'],
     true
   ],
   // DigitalSide Threat-Intel - OSINT Hub
@@ -395,6 +395,7 @@ export const CRASHLYTICS_WHITELIST = [
   '.metric.gstatic.com',
   // Misc
   'telemetry.1passwordservices.com',
+  'b5x-sentry.1passwordservices.com',
   'events.tableplus.com',
   'telemetry.nextjs.org',
   'telemetry.vercel.com',
