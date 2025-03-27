@@ -9,12 +9,24 @@ export const HOSTS: HostsSource[] = [
     ['https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt'],
     true
   ],
-  ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Xiaomi-Extension.txt', null, false],
-  ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Huawei-AdBlock.txt', null, false]
+  [
+    'https://cdn.jsdelivr.net/gh/jerryn70/GoodbyeAds@master/Extension/GoodbyeAds-Xiaomi-Extension.txt',
+    ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Xiaomi-Extension.txt'],
+    false
+  ],
+  [
+    'https://cdn.jsdelivr.net/gh/jerryn70/GoodbyeAds@master/Extension/GoodbyeAds-Huawei-AdBlock.txt',
+    ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Huawei-AdBlock.txt'],
+    false
+  ],
+  [
+    'https://cdn.jsdelivr.net/gh/jerryn70/GoodbyeAds@master/Extension/GoodbyeAds-Samsung-AdBlock.txt',
+    ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Samsung-AdBlock.txt'],
+    false
+  ]
 ];
 
 export const HOSTS_EXTRA: HostsSource[] = [
-  ['https://raw.githubusercontent.com/durablenapkin/block/master/tvstream.txt', null, true],
   // This stupid hosts blocks t.co, so we determine that this is also bullshit, so it is extra
   [
     'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext',
@@ -23,18 +35,23 @@ export const HOSTS_EXTRA: HostsSource[] = [
   ],
   // Dan Pollock's hosts file, 0.0.0.0 version is 30 KiB smaller
   [
-    'https://someonewhocares.org/hosts/zero/hosts',
-    ['https://proxy.cdn.skk.moe/https/someonewhocares.org/hosts/zero/hosts'],
+    'https://proxy.cdn.skk.moe/https/someonewhocares.org/hosts/zero/hosts',
+    ['https://someonewhocares.org/hosts/zero/hosts'],
     true
   ],
-  // ad-wars is not actively maintained since 2023.11, so we use jsDelivr as primary URL
-  [
-    'https://cdn.jsdelivr.net/gh/jdlingyu/ad-wars@master/hosts',
-    ['https://raw.githubusercontent.com/jdlingyu/ad-wars/master/hosts'],
-    false
-  ],
+  // ad-wars is not actively maintained since 2023.11 due to Tencent's Legal Notice
+  // All contents has been intergrated into the reject.conf file
+  // [
+  //   'https://cdn.jsdelivr.net/gh/jdlingyu/ad-wars@master/hosts',
+  //   ['https://raw.githubusercontent.com/jdlingyu/ad-wars/master/hosts'],
+  //   false
+  // ],
   // hoshsadiq adblock-nocoin-list extra
-  ['https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt', [], true]
+  [
+    'https://cdn.jsdelivr.net/gh/hoshsadiq/adblock-nocoin-list@master/hosts.txt',
+    ['https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt'],
+    true
+  ]
 ];
 
 export const DOMAIN_LISTS: HostsSource[] = [
@@ -493,7 +510,6 @@ export const PREDEFINED_WHITELIST = [
   'ab.chatgpt.com', // EasyPrivacy blocks this
   'jnn-pa.googleapis.com', // ad-wars
   'imasdk.googleapis.com', // ad-wars
-  '.l.qq.com', // ad-wars
   '.in-addr.arpa', // rDNS
   '.ip6.arpa', // rDNS
   '.clients.your-server.de', // rDNS .static.183.213.201.138.clients.your-server.de

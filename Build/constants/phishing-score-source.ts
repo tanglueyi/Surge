@@ -39,7 +39,8 @@ export const WHITELIST_MAIN_DOMAINS = new Set([
   'ipfs.eth.aragon.network',
   'wordpress.com',
   'cloud.microsoft', // actually owned by Microsoft
-  'windows.net' // Microsoft refuses to add web.core.windows.net to the Public Suffix List
+  'windows.net', // Microsoft refuses to add web.core.windows.net to the Public Suffix List
+  'myqcloud.com' // curben phishing-filter contains many entries
 ]);
 
 export const leathalKeywords = createKeywordFilter([
@@ -50,6 +51,13 @@ export const leathalKeywords = createKeywordFilter([
   'thetollroads',
   'getipass',
   '.secure.txtag',
+
+  '00lx.',
+  '0-lx.',
+  '01-x',
+  '0llx',
+  '0lx.',
+  'olx.o',
 
   // Fake TLD
   '.pl-',
