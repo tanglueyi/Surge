@@ -14,7 +14,7 @@
 
 `ruleset.skk.moe` 是由 Sukka 提供的 Ruleset Server，由 Cloudflare 驱动。但是由于众所周知的原因、Cloudflare 的节点在中国大陆的访问速度和稳定性都不理想。目前，Sukka Ruleset 提供了以下官方镜像：
 
-- `ruleset-mirror.skk.moe`：由 Sukka 维护，CDN 服务现由腾讯云 EdgeOne Pages 提供。
+- `ruleset-mirror.skk.moe`：由 Sukka 维护。
 
 为了改善访问速度和稳定性，欢迎大家搭建镜像、从以下 Git 仓库同步更新：
 
@@ -130,9 +130,9 @@ rules:
   - RULE-SET,reject_domainset,REJECT
   - RULE-SET,reject_extra_domainset,REJECT
 
-  - RULE-SET,reject_ip,REJECT
   - RULE-SET,reject_non_ip_drop,REJECT-DROP
   - RULE-SET,reject_non_ip_no_drop,REJECT
+  - RULE-SET,reject_ip,REJECT
 ```
 
 #### 搜狗输入法
