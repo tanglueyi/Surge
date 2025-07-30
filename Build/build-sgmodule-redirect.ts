@@ -108,7 +108,8 @@ const REDIRECT_MIRROR_307 = [
   // Minecraft Wiki
   ['minecraft.fandom.com/wiki/', 'https://minecraft.wiki/w/'],
   ['minecraft.fandom.com/', 'https://minecraft.wiki/'],
-  ['missav.com/', 'https://missav.ws/']
+  ['missav.com/', 'https://missav.ai/'],
+  ['missav.ws/', 'https://missav.ai/']
 ];
 
 const REDIRECT_FAKEWEBSITES = [
@@ -116,7 +117,7 @@ const REDIRECT_FAKEWEBSITES = [
   ['ign.xn--fiqs8s', 'https://cn.ign.com/ccpref/us'],
   // Fuck Makeding
   ['abbyychina.com', 'https://www.abbyy.cn'],
-  ['bartender.cc', 'https://cn.seagullscientific.com'],
+  ['bartender.cc', 'https://www.seagullscientific.com'],
   ['betterzip.net', 'https://macitbetter.com'],
   ['beyondcompare.cc', 'https://www.scootersoftware.com'],
   ['bingdianhuanyuan.cn', 'https://www.faronics.com'],

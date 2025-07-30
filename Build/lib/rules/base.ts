@@ -1,12 +1,15 @@
 import type { Span } from '../../trace';
 import { HostnameSmolTrie } from '../trie';
 import { not, nullthrow } from 'foxts/guard';
+import { fastIpVersion } from 'foxts/fast-ip-version';
+import { addArrayElementsToSet } from 'foxts/add-array-elements-to-set';
 import type { MaybePromise } from '../misc';
 import type { BaseWriteStrategy } from '../writing-strategy/base';
 import { merge as mergeCidr } from 'fast-cidr-tools';
 import { createRetrieKeywordFilter as createKeywordFilter } from 'foxts/retrie';
 import path from 'node:path';
 import { SurgeMitmSgmodule } from '../writing-strategy/surge';
+import { appendArrayInPlace } from 'foxts/append-array-in-place';
 
 /**
  * Holds the universal rule data (domain, ip, url-regex, etc. etc.)
@@ -15,9 +18,15 @@ import { SurgeMitmSgmodule } from '../writing-strategy/surge';
 export class FileOutput {
   protected strategies: BaseWriteStrategy[] = [];
 
+  protected dataSource = new Set<string>();
+
   public domainTrie = new HostnameSmolTrie(null);
+  public wildcardTrie: HostnameSmolTrie = new HostnameSmolTrie(null);
+
   protected domainKeywords = new Set<string>();
-  protected domainWildcard = new Set<string>();
+
+  private whitelistKeywords = new Set<string>();
+
   protected userAgent = new Set<string>();
   protected processName = new Set<string>();
   protected processPath = new Set<string>();
@@ -42,6 +51,12 @@ export class FileOutput {
 
   whitelistDomain = (domain: string) => {
     this.domainTrie.whitelist(domain);
+    this.wildcardTrie.whitelist(domain);
+    return this;
+  };
+
+  whitelistKeyword = (keyword: string) => {
+    this.whitelistKeywords.add(keyword);
     return this;
   };
 
@@ -66,9 +81,24 @@ export class FileOutput {
     this.strategies.push(strategy);
   }
 
-  protected description: string[] | readonly string[] | null = null;
+  protected description: string[] | null = null;
   withDescription(description: string[] | readonly string[]) {
-    this.description = description;
+    this.description = description as string[];
+    return this;
+  }
+
+  appendDescription(description: string | string[], ...rest: string[]) {
+    this.description ??= [];
+    if (typeof description === 'string') {
+      this.description.push(description);
+    } else {
+      appendArrayInPlace(this.description, description);
+    }
+
+    if (rest.length) {
+      appendArrayInPlace(this.description, rest);
+    }
+
     return this;
   }
 
@@ -108,6 +138,20 @@ export class FileOutput {
 
   addDomainKeyword(keyword: string) {
     this.domainKeywords.add(keyword);
+    return this;
+  }
+
+  bulkAddDomainKeyword(keywords: string[]) {
+    for (let i = 0, len = keywords.length; i < len; i++) {
+      this.domainKeywords.add(keywords[i]);
+    }
+    return this;
+  }
+
+  bulkAddDomainWildcard(domains: string[]) {
+    for (let i = 0, len = domains.length; i < len; i++) {
+      this.wildcardTrie.add(domains[i]);
+    }
     return this;
   }
 
@@ -160,7 +204,7 @@ export class FileOutput {
           this.addDomainKeyword(value);
           break;
         case 'DOMAIN-WILDCARD':
-          this.domainWildcard.add(value);
+          this.wildcardTrie.add(value);
           break;
         case 'USER-AGENT':
           this.userAgent.add(value);
@@ -225,6 +269,42 @@ export class FileOutput {
     return ip + '/128';
   };
 
+  addAnyCIDR(cidr: string, noResolve = false) {
+    const version = fastIpVersion(cidr);
+    if (version === 0) return this;
+
+    let list: Set<string>;
+    if (version === 4) {
+      list = noResolve ? this.ipcidrNoResolve : this.ipcidr;
+    } else /* if (version === 6) */ {
+      list = noResolve ? this.ipcidr6NoResolve : this.ipcidr6;
+    }
+
+    list.add(FileOutput.ipToCidr(cidr, version));
+    return this;
+  }
+
+  bulkAddAnyCIDR(cidrs: string[], noResolve = false) {
+    const list4 = noResolve ? this.ipcidrNoResolve : this.ipcidr;
+    const list6 = noResolve ? this.ipcidr6NoResolve : this.ipcidr6;
+
+    for (let i = 0, len = cidrs.length; i < len; i++) {
+      let cidr = cidrs[i];
+      const version = fastIpVersion(cidr);
+      if (version === 0) {
+        continue; // skip invalid IPs
+      }
+      cidr = FileOutput.ipToCidr(cidr, version);
+
+      if (version === 4) {
+        list4.add(cidr);
+      } else /* if (version === 6) */ {
+        list6.add(cidr);
+      }
+    }
+    return this;
+  }
+
   bulkAddCIDR4(cidrs: string[]) {
     for (let i = 0, len = cidrs.length; i < len; i++) {
       this.ipcidr.add(FileOutput.ipToCidr(cidrs[i], 4));
@@ -250,6 +330,19 @@ export class FileOutput {
     for (let i = 0, len = cidrs.length; i < len; i++) {
       this.ipcidr6NoResolve.add(FileOutput.ipToCidr(cidrs[i], 6));
     }
+    return this;
+  }
+
+  /**
+   * Add data source information. This will be rendered inside description
+   */
+  appendDataSource(source: string | string[]) {
+    if (typeof source === 'string') {
+      this.dataSource.add(source);
+    } else {
+      addArrayElementsToSet(this.dataSource, source);
+    }
+
     return this;
   }
 
@@ -296,17 +389,24 @@ export class FileOutput {
 
     this.strategiesWritten = true;
 
-    const kwfilter = createKeywordFilter(Array.from(this.domainKeywords));
+    // We use both DOMAIN-KEYWORD and whitelisted keyword to whitelist DOMAIN and DOMAIN-SUFFIX
+    const kwfilter = createKeywordFilter(
+      Array.from(this.domainKeywords)
+        .concat(Array.from(this.whitelistKeywords))
+    );
 
     if (this.strategies.filter(not(false)).length === 0) {
       throw new Error('No strategies to write ' + this.id);
     }
 
     const strategiesLen = this.strategies.length;
+
     this.domainTrie.dumpWithoutDot((domain, includeAllSubdomain) => {
       if (kwfilter(domain)) {
         return;
       }
+
+      this.wildcardTrie.whitelist(domain, includeAllSubdomain);
 
       for (let i = 0; i < strategiesLen; i++) {
         const strategy = this.strategies[i];
@@ -318,17 +418,37 @@ export class FileOutput {
       }
     }, true);
 
-    for (let i = 0, len = this.strategies.length; i < len; i++) {
+    // Now, we whitelisted out DOMAIN-KEYWORD
+    const whiteKwfilter = createKeywordFilter(Array.from(this.whitelistKeywords));
+    const whitelistedKeywords = Array.from(this.domainKeywords).filter(kw => !whiteKwfilter(kw));
+
+    for (let i = 0; i < strategiesLen; i++) {
       const strategy = this.strategies[i];
-      if (this.domainKeywords.size) {
+      if (whitelistedKeywords.length) {
         strategy.writeDomainKeywords(this.domainKeywords);
       }
-      if (this.domainWildcard.size) {
-        strategy.writeDomainWildcards(this.domainWildcard);
-      }
+
       if (this.protocol.size) {
         strategy.writeProtocols(this.protocol);
       }
+    }
+
+    this.wildcardTrie.dumpWithoutDot((wildcard) => {
+      if (kwfilter(wildcard)) {
+        return;
+      }
+
+      for (let i = 0; i < strategiesLen; i++) {
+        const strategy = this.strategies[i];
+        strategy.writeDomainWildcard(wildcard);
+      }
+    }, true);
+
+    const sourceIpOrCidr = Array.from(this.sourceIpOrCidr);
+
+    for (let i = 0; i < strategiesLen; i++) {
+      const strategy = this.strategies[i];
+
       if (this.userAgent.size) {
         strategy.writeUserAgents(this.userAgent);
       }
@@ -338,17 +458,11 @@ export class FileOutput {
       if (this.processPath.size) {
         strategy.writeProcessPaths(this.processPath);
       }
-    }
 
-    if (this.sourceIpOrCidr.size) {
-      const sourceIpOrCidr = Array.from(this.sourceIpOrCidr);
-      for (let i = 0, len = this.strategies.length; i < len; i++) {
-        this.strategies[i].writeSourceIpCidrs(sourceIpOrCidr);
+      if (this.sourceIpOrCidr.size) {
+        strategy.writeSourceIpCidrs(sourceIpOrCidr);
       }
-    }
 
-    for (let i = 0, len = this.strategies.length; i < len; i++) {
-      const strategy = this.strategies[i];
       if (this.sourcePort.size) {
         strategy.writeSourcePorts(this.sourcePort);
       }
@@ -381,13 +495,13 @@ export class FileOutput {
       ipcidr6NoResolve = Array.from(this.ipcidr6NoResolve);
     }
 
-    for (let i = 0, len = this.strategies.length; i < len; i++) {
+    for (let i = 0; i < strategiesLen; i++) {
       const strategy = this.strategies[i];
       // no-resolve
-      if (ipcidrNoResolve?.length) {
+      if (ipcidrNoResolve) {
         strategy.writeIpCidrs(ipcidrNoResolve, true);
       }
-      if (ipcidr6NoResolve?.length) {
+      if (ipcidr6NoResolve) {
         strategy.writeIpCidr6s(ipcidr6NoResolve, true);
       }
       if (this.ipasnNoResolve.size) {
@@ -415,21 +529,33 @@ export class FileOutput {
 
   write(): Promise<unknown> {
     return this.span.traceChildAsync('write all', async (childSpan) => {
-      await this.done();
+      await childSpan.traceChildAsync('done', () => this.done());
+
       childSpan.traceChildSync('write to strategies', () => this.writeToStrategies());
 
       return childSpan.traceChildAsync('output to disk', (childSpan) => {
         const promises: Array<Promise<void> | void> = [];
 
+        const descriptions = nullthrow(this.description, 'Missing description');
+
+        if (this.dataSource.size) {
+          descriptions.push(
+            '',
+            'This file contains data from:'
+          );
+          appendArrayInPlace(descriptions, Array.from(this.dataSource).sort().map((source) => `  - ${source}`));
+        }
+
         for (let i = 0, len = this.strategies.length; i < len; i++) {
           const strategy = this.strategies[i];
 
           const basename = (strategy.overwriteFilename || this.id) + '.' + strategy.fileExtension;
+
           promises.push(
             childSpan.traceChildAsync('write ' + strategy.name, (childSpan) => Promise.resolve(strategy.output(
               childSpan,
               nullthrow(this.title, 'Missing title'),
-              nullthrow(this.description, 'Missing description'),
+              descriptions,
               this.date,
               path.join(
                 strategy.outputDir,

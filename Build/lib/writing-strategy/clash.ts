@@ -1,7 +1,8 @@
 import { appendSetElementsToArray } from 'foxts/append-set-elements-to-array';
 import { BaseWriteStrategy } from './base';
 import { noop } from 'foxts/noop';
-import { fastIpVersion, notSupported, withBannerArray } from '../misc';
+import { notSupported, withBannerArray } from '../misc';
+import { fastIpVersion } from 'foxts/fast-ip-version';
 import { OUTPUT_CLASH_DIR } from '../../constants/dir';
 import { appendArrayInPlace } from 'foxts/append-array-in-place';
 import { MARKER_DOMAIN } from '../../constants/description';
@@ -30,7 +31,7 @@ export class ClashDomainSet extends BaseWriteStrategy {
   }
 
   writeDomainKeywords = noop;
-  writeDomainWildcards = noop;
+  writeDomainWildcard = noop;
   writeUserAgents = noop;
   writeProcessNames = noop;
   writeProcessPaths = noop;
@@ -64,7 +65,7 @@ export class ClashIPSet extends BaseWriteStrategy {
   writeDomain = notSupported('writeDomain');
   writeDomainSuffix = notSupported('writeDomainSuffix');
   writeDomainKeywords = notSupported('writeDomainKeywords');
-  writeDomainWildcards = notSupported('writeDomainWildcards');
+  writeDomainWildcard = notSupported('writeDomainWildcards');
   writeUserAgents = notSupported('writeUserAgents');
   writeProcessNames = notSupported('writeProcessNames');
   writeProcessPaths = notSupported('writeProcessPaths');
@@ -111,8 +112,8 @@ export class ClashClassicRuleSet extends BaseWriteStrategy {
     appendSetElementsToArray(this.result, keyword, i => `DOMAIN-KEYWORD,${i}`);
   }
 
-  writeDomainWildcards(wildcard: Set<string>): void {
-    appendSetElementsToArray(this.result, wildcard, i => `DOMAIN-REGEX,${ClashClassicRuleSet.domainWildCardToRegex(i)}`);
+  writeDomainWildcard(wildcard: string): void {
+    this.result.push(`DOMAIN-REGEX,${ClashClassicRuleSet.domainWildCardToRegex(wildcard)}`);
   }
 
   writeUserAgents = noop;

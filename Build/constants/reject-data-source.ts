@@ -1,6 +1,6 @@
 export const DEBUG_DOMAIN_TO_FIND: string | null = null; // example.com | null
 
-type HostsSource = [main: string, mirrors: string[] | null, includeAllSubDomain: boolean];
+type HostsSource = [main: string, mirrors: string[] | null, includeAllSubDomain: boolean, allowEmptyRemote?: boolean];
 
 export const HOSTS: HostsSource[] = [
   // WindowsSpyBlocker hasn't been updated since 2022-06-16, its content has been merged into domainset/reject.conf
@@ -36,7 +36,13 @@ export const HOSTS_EXTRA: HostsSource[] = [
   // Dan Pollock's hosts file, 0.0.0.0 version is 30 KiB smaller
   [
     'https://proxy.cdn.skk.moe/https/someonewhocares.org/hosts/zero/hosts',
-    ['https://someonewhocares.org/hosts/zero/hosts'],
+    [
+      'https://someonewhocares.org/hosts/zero/hosts',
+      // 2025-07-10 Dan Pollock's website begin to randomly Cloudflare Challenge.
+      // enable non-zero hosts as fallbacks.
+      'https://someonewhocares.org/hosts/hosts',
+      'https://proxy.cdn.skk.moe/https/someonewhocares.org/hosts/hosts'
+    ],
     true
   ],
   // ad-wars is not actively maintained since 2023.11 due to Tencent's Legal Notice
@@ -71,15 +77,14 @@ export const DOMAIN_LISTS_EXTRA: HostsSource[] = [
   // instead we maintain a list of our own
 
   // BarbBlock
-  // The barbblock list has never been updated since ~~2019-05~~ 2023-10, so we use jsdelivr instead
-  [
-    'https://cdn.jsdelivr.net/gh/paulgb/BarbBlock@main/blacklists/domain-list.txt',
-    ['https://paulgb.github.io/BarbBlock/blacklists/domain-list.txt'],
-    true
-  ],
-  // DigitalSide Threat-Intel - OSINT Hub
-  // Update once per day
-  ['https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt', [], true],
+  // The barbblock list has never been updated since ~~2019-05~~ 2023-10, merged to reject_extra.conf
+  // [
+  //   'https://cdn.jsdelivr.net/gh/paulgb/BarbBlock@main/blacklists/domain-list.txt',
+  //   ['https://paulgb.github.io/BarbBlock/blacklists/domain-list.txt'],
+  //   true
+  // ],
+  // DigitalSide Threat-Intel - OSINT Hub -- Dead, server offline
+  // ['https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt', [], true],
   // AdGuard CNAME Filter Combined
   // Update on a 7 days basis, so we can also use jsDelivr as primary URL
   [
@@ -128,12 +133,12 @@ export const DOMAIN_LISTS_EXTRA: HostsSource[] = [
   // ],
   // Curben's UrlHaus Malicious URL Blocklist
   [
-    'https://urlhaus-filter.pages.dev/urlhaus-filter-domains.txt',
+    'https://urlhaus-filter.pages.dev/urlhaus-filter-domains-online.txt',
     [
-      'https://malware-filter.pages.dev/urlhaus-filter-domains.txt',
-      'https://malware-filter.gitlab.io/urlhaus-filter/urlhaus-filter-domains.txt',
-      'https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-domains.txt',
-      'https://curbengh.github.io/urlhaus-filter/urlhaus-filter-domains.txt'
+      'https://malware-filter.pages.dev/urlhaus-filter-domains-online.txt',
+      'https://malware-filter.gitlab.io/urlhaus-filter/urlhaus-filter-domains-online.txt',
+      'https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-domains-online.txt',
+      'https://curbengh.github.io/urlhaus-filter/urlhaus-filter-domains-online.txt'
     ],
     true
   ]
@@ -483,7 +488,7 @@ export const PREDEFINED_WHITELIST = [
   '.t.co', // pgl yoyo add t.co to the blacklist
   '.survicate.com', // AdGuardDNSFilter
   '.perfops.io', // AdGuardDNSFilter
-  '.d2axgrpnciinw7.cloudfront.net', // ADGuardDNSFilter
+  'd2axgrpnciinw7.cloudfront.net', // ADGuardDNSFilter
   '.sb-cd.com', // AdGuard
   '.storage.yandexcloud.net', // phishing list
   '.login.microsoftonline.com', // phishing list
@@ -550,6 +555,7 @@ export const PREDEFINED_WHITELIST = [
   '.expobarrio.com',
   '.hamdandates.com',
   '.amzone.co.jp',
+  '.xpanama.net',
 
   // Migrate from SmartTV-AGH List
   'mhc-ajax-eu.myhomescreen.tv',
@@ -562,3 +568,8 @@ export const PREDEFINED_WHITELIST = [
   'hbbtv.redbutton.de',
   'hbbtv.kika.de'
 ];
+
+export const BOGUS_NXDOMAIN_DNSMASQ = [
+  'https://cdn.jsdelivr.net/gh/felixonmars/dnsmasq-china-list@master/bogus-nxdomain.china.conf',
+  ['https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/bogus-nxdomain.china.conf']
+] as const;

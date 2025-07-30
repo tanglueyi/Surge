@@ -2,6 +2,7 @@ import { dirname } from 'node:path';
 import fs from 'node:fs';
 import type { PathLike } from 'node:fs';
 import fsp from 'node:fs/promises';
+import { appendArrayInPlace } from 'foxts/append-array-in-place';
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -32,6 +33,8 @@ interface Write {
   ): Promise<void>
 }
 
+export type VoidOrVoidArray = void | VoidOrVoidArray[];
+
 export function mkdirp(dir: string) {
   if (fs.existsSync(dir)) {
     return;
@@ -47,19 +50,23 @@ export const writeFile: Write = async (destination: string, input, dir = dirname
   return fsp.writeFile(destination, input, { encoding: 'utf-8' });
 };
 
-export const removeFiles = async (files: string[]) => Promise.all(files.map((file) => fsp.rm(file, { force: true })));
-
 export function withBannerArray(title: string, description: string[] | readonly string[], date: Date, content: string[]) {
-  return [
+  const result: string[] = [
     '#########################################',
     `# ${title}`,
     `# Last Updated: ${date.toISOString()}`,
-    `# Size: ${content.length}`,
-    ...description.map(line => (line ? `# ${line}` : '#')),
-    '#########################################',
-    ...content,
-    '################## EOF ##################'
+    `# Size: ${content.length}`
   ];
+
+  appendArrayInPlace(result, description.map(line => (line ? `# ${line}` : '#')));
+
+  result.push('#########################################');
+
+  appendArrayInPlace(result, content);
+
+  result.push('################## EOF ##################', '');
+
+  return result;
 };
 
 export function notSupported(name: string) {
@@ -81,8 +88,4 @@ export function isDirectoryEmptySync(path: PathLike) {
   } finally {
     directoryHandle.closeSync();
   }
-}
-
-export function fastIpVersion(ip: string) {
-  return ip.includes(':') ? 6 : (ip.includes('.') ? 4 : 0);
 }

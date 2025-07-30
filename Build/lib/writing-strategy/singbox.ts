@@ -1,7 +1,8 @@
 import { BaseWriteStrategy } from './base';
 import { appendArrayInPlace } from 'foxts/append-array-in-place';
 import { noop } from 'foxts/noop';
-import { fastIpVersion, withIdentityContent } from '../misc';
+import { withIdentityContent } from '../misc';
+import { fastIpVersion } from 'foxts/fast-ip-version';
 import stringify from 'json-stringify-pretty-compact';
 import { OUTPUT_SINGBOX_DIR } from '../../constants/dir';
 import { MARKER_DOMAIN } from '../../constants/description';
@@ -71,11 +72,9 @@ export class SingboxSource extends BaseWriteStrategy {
     );
   }
 
-  writeDomainWildcards(wildcard: Set<string>): void {
-    appendArrayInPlace(
-      this.singbox.domain_regex ??= [],
-      Array.from(wildcard, SingboxSource.domainWildCardToRegex)
-    );
+  writeDomainWildcard(wildcard: string): void {
+    this.singbox.domain_regex ??= [];
+    this.singbox.domain_regex.push(SingboxSource.domainWildCardToRegex(wildcard));
   }
 
   writeUserAgents = noop;

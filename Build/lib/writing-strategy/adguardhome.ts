@@ -48,18 +48,16 @@ export class AdGuardHome extends BaseWriteStrategy {
   writeDomainKeywords(keywords: Set<string>): void {
     for (const keyword of keywords) {
       // Use regex to match keyword
-      this.result.push(`/${escapeStringRegexp(keyword)}/`);
+      this.result.push(`/${escapeStringRegexp(keyword, false)}/`);
     }
   }
 
-  writeDomainWildcards(wildcards: Set<string>): void {
-    for (const wildcard of wildcards) {
-      const processed = wildcard.replaceAll('?', '*');
-      if (processed.startsWith('*.')) {
-        this.result.push(`||${processed.slice(2)}^`);
-      } else {
-        this.result.push(`|${processed}^`);
-      }
+  writeDomainWildcard(wildcard: string): void {
+    const processed = wildcard.replaceAll('?', '*');
+    if (processed.startsWith('*.')) {
+      this.result.push(`||${processed.slice(2)}^`);
+    } else {
+      this.result.push(`|${processed}^`);
     }
   }
 

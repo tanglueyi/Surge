@@ -134,6 +134,7 @@ const BBC: StreamService = {
     'DOMAIN-SUFFIX,tvlicensing.co.uk',
     'DOMAIN-KEYWORD,bbcfmt',
     'DOMAIN-KEYWORD,uk-live',
+    'DOMAIN,bbc.mp-pxcdn.com', // CloudFront country blocking https://t.me/SURGEPRO/2669346
 
     'DOMAIN-SUFFIX,bbc.co.uk',
     'DOMAIN-SUFFIX,bbci.co.uk',
@@ -302,7 +303,10 @@ const HBO_ASIA: StreamService = {
     'DOMAIN-SUFFIX,hboasia.com',
     'DOMAIN-SUFFIX,hbogoasia.com',
     'DOMAIN-SUFFIX,hbogoasia.hk',
-    'DOMAIN-KEYWORD,.hbogoasia.',
+    'DOMAIN-SUFFIX,hbogoasia.id',
+    'DOMAIN-SUFFIX,hbogoasia.sg',
+    'DOMAIN-SUFFIX,hbogoasia.tw',
+    'DOMAIN-SUFFIX,hbogoasia.ph',
 
     'DOMAIN,44wilhpljf.execute-api.ap-southeast-1.amazonaws.com',
     // 'DOMAIN,bcbolthboa-a.akamaihd.net',
