@@ -1,8 +1,8 @@
 import picocolors from 'picocolors';
 import undici, {
   interceptors,
-  Agent,
-  setGlobalDispatcher
+  Agent
+  // setGlobalDispatcher
 } from 'undici';
 
 import type {
@@ -25,7 +25,7 @@ if (!fs.existsSync(CACHE_DIR)) {
 
 const agent = new Agent({ allowH2: true });
 
-setGlobalDispatcher(agent.compose(
+(agent.compose(
   interceptors.dns({
     // disable IPv6
     dualStack: false,
@@ -122,7 +122,7 @@ setGlobalDispatcher(agent.compose(
       location: path.join(CACHE_DIR, 'undici-better-sqlite3-cache-store.db'),
       maxEntrySize: 1024 * 1024 * 100 // 100 MiB
     }),
-    cacheByDefault: 180 // 3 minutes
+    cacheByDefault: 600 // 10 minutes
   })
 ));
 
