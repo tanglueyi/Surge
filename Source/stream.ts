@@ -389,7 +389,7 @@ const IQIYI_GLOBAL: StreamService = {
     'DOMAIN,cache-video.iq.com',
     'DOMAIN,akmcdnoversea-tw.inter.ptqy.gitv.tv',
     'DOMAIN,chuangcachecdnoversea-tw.inter.ptqy.gitv.tv',
-    'DOMAIN-SUFFIX,inter.iqiyi.com',
+    // 'DOMAIN-SUFFIX,inter.iqiyi.com', // matching domestic CDN lvbaiducdncmn.inter.iqiyi.com, baiducdnct.inter.iqiyi.com, etc.
     'DOMAIN-SUFFIX,intl-rcd.iqiyi.com',
     'DOMAIN-SUFFIX,intl-subscription.iqiyi.com',
     'DOMAIN-SUFFIX,intl.iqiyi.com'
@@ -446,7 +446,9 @@ const LITV: StreamService = {
   name: 'LiTV',
   rules: [
     'DOMAIN,litvfreemobile-hichannel.cdn.hinet.net',
-    'DOMAIN-SUFFIX,litv.tv'
+    'DOMAIN,ntdfreepc-tgc.cdn.hinet.net',
+    'DOMAIN,www.litv.tv',
+    'DOMAIN,cdi.ofiii.com' // Ofiii Free Movie
   ]
 };
 
@@ -815,7 +817,7 @@ export const ALL: StreamService[] = [
   JOOX,
   KKBOX,
   KKTV,
-  LINE_TV, LITV,
+  LINE_TV,
   MY5, MYTV_SUPER,
   NETFLIX, NAVER_TV, NICONICO, NHK_PLUS, NOW_E,
   OVERCAST_FM,
