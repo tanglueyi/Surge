@@ -8,12 +8,14 @@ const dnsServers = [
   'dns.cloudflare.com', // Cloudflare DoH that uses different IPs: 172.64.41.8,162.159.61.8
   'cloudflare-dns.com', // Cloudflare DoH that uses different IPs: 104.16.249.249,104.16.248.249
   // one.one.one.one // Cloudflare DoH that uses 1.1.1.1 and 1.0.0.1
-  // '101.101.101.101', // TWNIC, has DNS pollution, e.g. t66y.com
+  // '101.101.101.101', 'dns.twnic.tw' // TWNIC, has DNS pollution, e.g. t66y.com
+  // 'dns.hinet.net' // HiNet DoH, has DNS pollution, e.g. t66y.com
   '185.222.222.222', '45.11.45.11', // DNS.SB
   'doh.dns.sb', // DNS.SB, Unicast PoPs w/ GeoDNS
   // 'doh.sb', // DNS.SB xTom Anycast IP
   // 'dns.sb', // DNS.SB use same xTom Anycast IP as doh.sb
-  'dns10.quad9.net', // Quad9 unfiltered
+  // 'dns10.quad9.net', // Quad9 unfiltered
+  '9.9.9.10', '149.112.112.10', // Quad9 unfiltered
   'doh.sandbox.opendns.com', // OpenDNS sandbox (unfiltered)
   'unfiltered.adguard-dns.com',
   // 'v.recipes', // Proxy Cloudflare, too many HTTP 503

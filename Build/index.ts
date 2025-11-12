@@ -1,7 +1,6 @@
 import process from 'node:process';
 import os from 'node:os';
 import fs from 'node:fs';
-import fsp from 'node:fs/promises';
 
 import { downloadPreviousBuild } from './download-previous-build';
 import { buildCommon } from './build-common';
@@ -13,6 +12,7 @@ import { buildTelegramCIDR } from './build-telegram-cidr';
 import { buildChnCidr } from './build-chn-cidr';
 import { buildSpeedtestDomainSet } from './build-speedtest-domainset';
 import { buildDomesticRuleset } from './build-domestic-direct-lan-ruleset-dns-mapping-module';
+import { buildGlobalRuleset } from './build-global-server-dns-mapping';
 import { buildStreamService } from './build-stream-service';
 
 import { buildRedirectModule } from './build-sgmodule-redirect';
@@ -29,7 +29,7 @@ import { buildCloudMounterRules } from './build-cloudmounter-rules';
 import { createSpan, printTraceResult, whyIsNodeRunning } from './trace';
 import { buildDeprecateFiles } from './build-deprecate-files';
 import path from 'node:path';
-import { CACHE_DIR, ROOT_DIR } from './constants/dir';
+import { ROOT_DIR } from './constants/dir';
 import { isCI } from 'ci-info';
 
 process.on('uncaughtException', (error) => {
@@ -40,12 +40,6 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection:', reason);
   process.exit(1);
 });
-
-const removesFiles = [
-  path.join(CACHE_DIR, '.cache.db'),
-  path.join(CACHE_DIR, '.cache.db-shm'),
-  path.join(CACHE_DIR, '.cache.db-wal')
-];
 
 const buildFinishedLock = path.join(ROOT_DIR, '.BUILD_FINISHED');
 
@@ -89,7 +83,6 @@ const buildFinishedLock = path.join(ROOT_DIR, '.BUILD_FINISHED');
     const buildCommonPromise = downloadPreviousBuildPromise.then(() => buildCommon(rootSpan));
 
     await Promise.all([
-      ...removesFiles.map(file => fsp.rm(file, { force: true })),
       downloadPreviousBuildPromise,
       buildCommonPromise,
       downloadPreviousBuildPromise.then(() => buildRejectIPList(rootSpan)),
@@ -100,6 +93,7 @@ const buildFinishedLock = path.join(ROOT_DIR, '.BUILD_FINISHED');
       downloadPreviousBuildPromise.then(() => buildChnCidr(rootSpan)),
       downloadPreviousBuildPromise.then(() => buildSpeedtestDomainSet(rootSpan)),
       downloadPreviousBuildPromise.then(() => buildDomesticRuleset(rootSpan)),
+      downloadPreviousBuildPromise.then(() => buildGlobalRuleset(rootSpan)),
       downloadPreviousBuildPromise.then(() => buildRedirectModule(rootSpan)),
       downloadPreviousBuildPromise.then(() => buildAlwaysRealIPModule(rootSpan)),
       downloadPreviousBuildPromise.then(() => buildStreamService(rootSpan)),
