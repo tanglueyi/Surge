@@ -105,8 +105,10 @@ const pool = new Worktank({
           } else {
             if (BLACK_TLD.has(tld)) {
               score += 3;
-            } else if (tld.length > 6) {
+            } else if (tld.length > 4) {
               score += 2;
+            } else if (tld.length > 5) {
+              score += 4;
             }
             if (apexDomain.length >= 18) {
               score += 0.5;
@@ -200,17 +202,10 @@ const pool = new Worktank({
 export function getPhishingDomains(parentSpan: Span) {
   return parentSpan.traceChild('get phishing domains').traceAsyncFn(async (span) => span.traceChildAsync(
     'process phishing domain set',
-    async () => {
-      const phishingDomains = await pool.exec(
-        'getPhishingDomains',
-        [
-          __filename,
-          require.main === module
-        ]
-      );
-      pool.terminate();
-      return phishingDomains;
-    }
+    () => pool.exec(
+      'getPhishingDomains',
+      [__filename, require.main === module]
+    ).finally(() => pool.terminate())
   ));
 }
 
