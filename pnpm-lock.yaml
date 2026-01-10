@@ -35,12 +35,9 @@ importers:
       csv-parse:
         specifier: ^6.1.0
         version: 6.1.0
-      dns2:
-        specifier: github:lsongdev/node-dns#e4fa035aca0b8eb730bde3431fbf0c60a31a09c9
-        version: https://codeload.github.com/lsongdev/node-dns/tar.gz/e4fa035aca0b8eb730bde3431fbf0c60a31a09c9
       domain-alive:
-        specifier: ^0.1.11
-        version: 0.1.11
+        specifier: ^0.1.17
+        version: 0.1.17
       fast-cidr-tools:
         specifier: ^0.3.4
         version: 0.3.4
@@ -120,9 +117,6 @@ importers:
       '@types/cli-progress':
         specifier: ^3.11.6
         version: 3.11.6
-      '@types/dns2':
-        specifier: ^2.0.10
-        version: 2.0.10
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
@@ -667,9 +661,6 @@ packages:
   '@types/cli-progress@3.11.6':
     resolution: {integrity: sha512-cE3+jb9WRlu+uOSAugewNpITJDt1VF8dHOopPO4IABFc3SXYL5WE/+PTz/FCdZRRfIujiWW3n3aMbv1eIGVRWA==}
 
-  '@types/dns2@2.0.10':
-    resolution: {integrity: sha512-3ezTiJfY6/VlXnvEOVSSbWpFbxtS3zXi0f2mccV6tI7wT+BIvTgLZhEUVHpiE1ycLKMqJyXndmkKw42nX49MQA==}
-
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -1117,19 +1108,11 @@ packages:
     resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
     engines: {node: '>=0.3.1'}
 
-  dns2@https://codeload.github.com/lsongdev/node-dns/tar.gz/3adb7e91b3101c0e4f43ebaca3a568269ea04d11:
-    resolution: {tarball: https://codeload.github.com/lsongdev/node-dns/tar.gz/3adb7e91b3101c0e4f43ebaca3a568269ea04d11}
-    version: 2.1.0
-
-  dns2@https://codeload.github.com/lsongdev/node-dns/tar.gz/e4fa035aca0b8eb730bde3431fbf0c60a31a09c9:
-    resolution: {tarball: https://codeload.github.com/lsongdev/node-dns/tar.gz/e4fa035aca0b8eb730bde3431fbf0c60a31a09c9}
-    version: 2.1.0
-
   dom-serializer@1.4.1:
     resolution: {integrity: sha512-VHwB3KfrcOOkelEG2ZOfxqLZdfkil8PtJi4P8N2MMXucZq2yLp75ClViUlOVwyoHEDjYU433Aq+5zWP61+RGag==}
 
-  domain-alive@0.1.11:
-    resolution: {integrity: sha512-ztcLT4rQQWHRetdfvcTu8eAi0wL9c6uZEpqZS1EsFQc4K0qMOQofNpTLwI4fJXAUvBpOu2IBdyU+yKoHS+wwPA==}
+  domain-alive@0.1.17:
+    resolution: {integrity: sha512-ACL2WVZ5lldyBnrFjD4Jb9FeJd4SS4vhiKoIfq2qQrWXfAxM+go1WjjykceyjlCj8zqby3Ss0Nh5hDyl1/SFzw==}
 
   domelementtype@2.3.0:
     resolution: {integrity: sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==}
@@ -2657,10 +2640,6 @@ snapshots:
     dependencies:
       '@types/node': 24.10.4
 
-  '@types/dns2@2.0.10':
-    dependencies:
-      '@types/node': 24.10.4
-
   '@types/estree@1.0.8': {}
 
   '@types/istanbul-lib-coverage@2.0.6': {}
@@ -3066,20 +3045,15 @@ snapshots:
 
   diff@7.0.0: {}
 
-  dns2@https://codeload.github.com/lsongdev/node-dns/tar.gz/3adb7e91b3101c0e4f43ebaca3a568269ea04d11: {}
-
-  dns2@https://codeload.github.com/lsongdev/node-dns/tar.gz/e4fa035aca0b8eb730bde3431fbf0c60a31a09c9: {}
-
   dom-serializer@1.4.1:
     dependencies:
       domelementtype: 2.3.0
       domhandler: 4.3.1
       entities: 2.2.0
 
-  domain-alive@0.1.11:
+  domain-alive@0.1.17:
     dependencies:
       debug: 4.4.1
-      dns2: https://codeload.github.com/lsongdev/node-dns/tar.gz/3adb7e91b3101c0e4f43ebaca3a568269ea04d11
       foxts: 5.0.4
       tldts: 7.0.19
     transitivePeerDependencies:
