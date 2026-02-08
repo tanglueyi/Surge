@@ -93,6 +93,9 @@ export const DOMESTICS: Record<string, DNSMapping> = {
       '+yunos.com',
       '+nlark.com',
       '+yuque.com',
+      'quark.cn',
+
+      '+geovisearth.com', // tiles.geovisearth.com, tiles{1~3}.geovisearth.com
 
       // Bilibili Aliyun CDN
       '$upos-sz-mirrorali.bilivideo.com',
@@ -161,6 +164,8 @@ export const DOMESTICS: Record<string, DNSMapping> = {
       '+smtcdns.net',
       'coding.net',
       '+codehub.cn',
+      'cnb.cool',
+      'webank.com',
 
       // AcFun QCloud CDN
       '$tx-safety-video.acfun.cn'
@@ -206,6 +211,7 @@ export const DOMESTICS: Record<string, DNSMapping> = {
     domains: [
       'mi.com',
       'duokan.com',
+      'miwifi.com',
       '+mi-img.com',
       '+mi-idc.com',
       '+xiaoaisound.com', // only subdomains
@@ -219,7 +225,8 @@ export const DOMESTICS: Record<string, DNSMapping> = {
       'xiaomi.net',
       'xiaomiev.com',
       'xiaomiyoupin.com',
-      'gorouter.info'
+      'gorouter.info',
+      'mipay.com'
     ]
   },
   BYTEDANCE: {
@@ -251,6 +258,7 @@ export const DOMESTICS: Record<string, DNSMapping> = {
       'zjurl.cn',
       'okr.com',
       'douyin.com',
+      'douyinpay.com',
       '+douyinpic.com',
       '+douyinstatic.com',
       '+douyincdn.com',

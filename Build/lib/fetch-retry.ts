@@ -177,7 +177,7 @@ export async function $$fetch(url: string, init: RequestInit = defaultRequestIni
   }
 }
 
-export const fetch = $$fetch;
+export { $$fetch as '~fetch' };
 
 /** @deprecated -- undici.requests doesn't support gzip/br/deflate, and has difficulty w/ undidi cache */
 export async function requestWithLog(url: string, opt?: Parameters<typeof undici.request>[1]) {
