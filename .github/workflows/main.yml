@@ -102,7 +102,7 @@ jobs:
             exit 1
           fi
           echo "public directory is ready: ${{ steps.ramdisk.outputs.build_dir }}"
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: build-artifact-${{ github.sha }}-${{ github.run_number }}
           path: ${{ steps.ramdisk.outputs.build_dir }}
@@ -125,7 +125,7 @@ jobs:
     name: Diff output
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: build-artifact-${{ github.sha }}-${{ github.run_number }}
           path: public
@@ -161,7 +161,7 @@ jobs:
           key: deploy-to-cloudflare-npm-${{ runner.os }}-${{ runner.arch }}-wrangler-${{ matrix.wranglerVersion }}
           restore-keys: |
             deploy-to-cloudflare-npm-${{ runner.os }}-${{ runner.arch }}-wrangler-
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: build-artifact-${{ github.sha }}-${{ github.run_number }}
           path: public
@@ -179,7 +179,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: build-artifact-${{ github.sha }}-${{ github.run_number }}
           path: public
