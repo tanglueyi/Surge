@@ -1,14 +1,16 @@
 import picocolors from 'picocolors';
 import undici, {
   interceptors,
-  Agent
+  Agent,
+  Request as UndiciRequest
   // setGlobalDispatcher
 } from 'undici';
 
 import type {
   Dispatcher,
   Response,
-  RequestInit
+  RequestInit,
+  RequestInfo
 } from 'undici';
 import { BetterSqlite3CacheStore } from 'undici-cache-store-better-sqlite3';
 
@@ -24,9 +26,11 @@ if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
 
-const agent = new Agent({ allowH2: false });
+const agent = new Agent({
+  allowH2: true
+});
 
-(agent.compose(
+agent.compose(
   interceptors.dns({
     // disable IPv6
     dualStack: false,
@@ -126,7 +130,7 @@ const agent = new Agent({ allowH2: false });
     }),
     cacheByDefault: 600 // 10 minutes
   })
-));
+);
 
 function calculateRetryAfterHeader(retryAfter: string) {
   const current = Date.now();
@@ -137,9 +141,17 @@ export class ResponseError<T extends UndiciResponseData | Response> extends Erro
   readonly code: number;
   readonly statusCode: number;
 
-  constructor(public readonly res: T, public readonly url: string, ...args: any[]) {
+  readonly url: string;
+
+  constructor(public readonly res: T, public readonly info: RequestInfo, ...args: any[]) {
     const statusCode = 'statusCode' in res ? res.statusCode : res.status;
     super('HTTP ' + statusCode + ' ' + args.map(_ => inspect(_)).join(' '));
+
+    this.url = typeof info === 'string'
+      ? info
+      : ('url' in info
+        ? info.url
+        : info.href);
 
     // eslint-disable-next-line sukka/unicorn/custom-error-definition -- deliberatly use previous name
     this.name = this.constructor.name;
@@ -155,7 +167,9 @@ export const defaultRequestInit = {
   }
 };
 
-export async function $$fetch(url: string, init: RequestInit = defaultRequestInit) {
+export async function $$fetch(url: RequestInfo, init: RequestInit = defaultRequestInit) {
+  init.dispatcher = agent;
+
   try {
     const res = await undici.fetch(url, init);
     if (res.status >= 400) {
@@ -171,7 +185,7 @@ export async function $$fetch(url: string, init: RequestInit = defaultRequestIni
     if (isAbortErrorLike(err)) {
       console.log(picocolors.gray('[fetch abort]'), url);
     } else {
-      console.log(picocolors.gray('[fetch fail]'), url, { name: (err as any).name }, err);
+      console.log(picocolors.gray('[fetch fail]'), url, err);
     }
 
     throw err;
@@ -180,8 +194,33 @@ export async function $$fetch(url: string, init: RequestInit = defaultRequestIni
 
 export { $$fetch as '~fetch' };
 
+/**
+ * A fetch wrapper for DoH (DNS-over-HTTPS) usage where the input may be a
+ * `Request` object created by a different undici instance or Node.js globals.
+ * Without normalisation, undici's internal `instanceof Request` check fails and
+ * it tries to parse `[object Request]` as a URL.
+ * See https://github.com/nodejs/undici/issues/2155
+ */
+export async function fetchForDoH(input: RequestInfo, init?: RequestInit) {
+  if (typeof input === 'object' && 'url' in input) {
+    // Normalise the foreign Request into a proper undici Request, preserving all
+    // of its properties. init is passed separately so undici merges them itself,
+    // exactly as real fetch(request, init) would — no manual header handling needed.
+    input = new UndiciRequest(input.url, {
+      method: input.method,
+      headers: input.headers,
+      body: input.body,
+      signal: input.signal
+    });
+  }
+  return $$fetch(input, init);
+}
+
 /** @deprecated -- undici.requests doesn't support gzip/br/deflate, and has difficulty w/ undidi cache */
 export async function requestWithLog(url: string, opt?: Parameters<typeof undici.request>[1]) {
+  opt ??= {};
+  opt.dispatcher = agent;
+
   try {
     const res = await undici.request(url, opt);
     if (res.statusCode >= 400) {
@@ -197,7 +236,7 @@ export async function requestWithLog(url: string, opt?: Parameters<typeof undici
     if (isAbortErrorLike(err)) {
       console.log(picocolors.gray('[fetch abort]'), url);
     } else {
-      console.log(picocolors.gray('[fetch fail]'), url, { name: (err as any).name }, err);
+      console.log(picocolors.gray('[fetch fail]'), url, { name: err instanceof Error ? err.name : undefined }, err);
     }
 
     throw err;
