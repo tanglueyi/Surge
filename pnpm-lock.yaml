@@ -15,8 +15,8 @@ importers:
   .:
     dependencies:
       '@ghostery/adblocker':
-        specifier: ^2.14.4
-        version: 2.14.4
+        specifier: ^2.15.0
+        version: 2.15.0
       '@henrygd/queue':
         specifier: ^1.2.0
         version: 1.2.0
@@ -42,8 +42,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       fast-uri:
-        specifier: ^3.1.0
-        version: 3.1.0
+        specifier: ^3.1.1
+        version: 3.1.1
       fdir:
         specifier: ^6.5.0
         version: 6.5.0(picomatch@4.0.4)
@@ -97,8 +97,8 @@ importers:
         version: 4.0.0
     devDependencies:
       '@eslint-sukka/node':
-        specifier: ^8.10.1
-        version: 8.10.1(eslint@10.3.0)(typescript@6.0.3)
+        specifier: ^8.10.2
+        version: 8.10.2(eslint@10.3.0)(typescript@6.0.3)
       '@swc-node/register':
         specifier: ^1.11.1
         version: 1.11.1(@swc/core@1.13.5)(@swc/types@0.1.25)(typescript@6.0.3)
@@ -130,11 +130,11 @@ importers:
         specifier: ^10.3.0
         version: 10.3.0
       eslint-config-sukka:
-        specifier: ^8.10.1
-        version: 8.10.1(@typescript-eslint/utils@8.59.1(eslint@10.3.0)(typescript@6.0.3))(eslint@10.3.0)(typescript@6.0.3)
+        specifier: ^8.10.2
+        version: 8.10.2(@typescript-eslint/utils@8.59.1(eslint@10.3.0)(typescript@6.0.3))(eslint@10.3.0)(typescript@6.0.3)
       eslint-formatter-sukka:
-        specifier: ^8.10.1
-        version: 8.10.1(eslint@10.3.0)
+        specifier: ^8.10.2
+        version: 8.10.2(eslint@10.3.0)
       jest-worker:
         specifier: ^30.3.0
         version: 30.3.0
@@ -184,13 +184,13 @@ packages:
     resolution: {integrity: sha512-EriSTlt5OC9/7SXkRSCAhfSxxoSUgBm33OH+IkwbdpgoqsSsUg7y3uh+IICI/Qg4BBWr3U2i39RpmycbxMq4ew==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
-  '@eslint-sukka/eslint-plugin-stylistic@8.10.1':
-    resolution: {integrity: sha512-FkcU+3aIylxs4poKI+Rw/s+wh2yLiw9GZ6kODxtxrISg4wEZNqQaNzgPX1Q/wcO/+XAOkA+fR8l79peOPsYGeQ==}
+  '@eslint-sukka/eslint-plugin-stylistic@8.10.2':
+    resolution: {integrity: sha512-EPNANn6vZvPls25vZuRB4SDDad5STfJLqP1Phf8XH+b+jitc08i3FyKfzPBCd9A79XNdDsDvMlq+Z/tItxdClQ==}
     peerDependencies:
       eslint: '*'
 
-  '@eslint-sukka/eslint-plugin-sukka-full@8.10.1':
-    resolution: {integrity: sha512-pku8KANIzJ781S/6MdKIoc6QplrI4BkZIt7GwJN4qxAJ8ffimTC6NWFGfgufXyLlgP87KdqfyDC2zsg9QZODPA==}
+  '@eslint-sukka/eslint-plugin-sukka-full@8.10.2':
+    resolution: {integrity: sha512-IEAVv0k8A0/0T9nM2unjBfnnkSTsGPNUHtdBf0NrlRz+/9wLamXCpf3PoQVfXSVQYBQpT6h32xfEa65ZmNWVXw==}
     peerDependencies:
       eslint: '*'
       typescript: '*'
@@ -198,11 +198,11 @@ packages:
       typescript:
         optional: true
 
-  '@eslint-sukka/node@8.10.1':
-    resolution: {integrity: sha512-sGNqKsmDcbJJKOEWyxbp7xjlLS2Q/FF6Qvee4nJlflQNpYGVrL2+gPaRRHqBw/9D3QVlL03inplUzpiajNt8mw==}
+  '@eslint-sukka/node@8.10.2':
+    resolution: {integrity: sha512-mhpt/PPtRAVYWmOd9tkYLHvc4QHX2G2kza/xaOn161p70PjUNphz2Fm++EmThDpVNIZXChURwZi0GiqKnbl0EQ==}
 
-  '@eslint-sukka/shared@8.10.1':
-    resolution: {integrity: sha512-hve7iqd3t+coOI1jP619cllsOnMONDz5mufQdlOvlTHDmjZU/Sh2VUeD/mRqbDMURzZuJ0Y2rHcW084EQHsIgw==}
+  '@eslint-sukka/shared@8.10.2':
+    resolution: {integrity: sha512-KbrwzJWWtu9ks/e+hHaCaC7FcBwsfrKj0lRQkagOpg3jXUmDQQh8eczsNGi8oIGsIKCTuhCVe9blaDDHkPBMjQ==}
     peerDependencies:
       eslint: '*'
 
@@ -239,14 +239,14 @@ packages:
     resolution: {integrity: sha512-rZAP3aVgB9ds9KOeUSL+zZ21hPmo8dh6fnIFwRQj5EAZl9gzR7wxYbYXYysAM8CTqGmUGyp2S4kUdV17MnGuWQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  '@ghostery/adblocker-content@2.14.4':
-    resolution: {integrity: sha512-UjFUH9toWDyZP2YylyWrEBjPWFH6nW0eUw3VDw4tLO24jE7qT9NlFZJAUAxUPSvRJeAo4cCsc/FS42c8ZRSgNQ==}
+  '@ghostery/adblocker-content@2.15.0':
+    resolution: {integrity: sha512-CgQDRvpbqVQYEKveffFilUgy0QNRIYNxv64dTuuThZd0gTWebfg4LZF4H/lagow5GSoiDyXnZXzhSOTonkOZvg==}
 
-  '@ghostery/adblocker-extended-selectors@2.14.4':
-    resolution: {integrity: sha512-j8K2K63//rg/0IiGe5VxhP2xIa0ukJZPXYvIIJgudF8vAJyqmO4tubP6br6568HuPTHslEXhOtTGQpbnTUDfLQ==}
+  '@ghostery/adblocker-extended-selectors@2.15.0':
+    resolution: {integrity: sha512-exdYY2eKOXSyyd3cwfOjE2iq/8rOdkNgdkZ1Mm33361GkB2HzSrQWMczyGIlAc4CAviNV1aWu7Mlqph12WVTrg==}
 
-  '@ghostery/adblocker@2.14.4':
-    resolution: {integrity: sha512-t6it53XvZoiJ5rS9oMsUTYC3l2IP3IYxUfJcnbvTWWEgiE/v6ltJpF3wr2XObz5Rv9ntutrT9ldpiCHlSJA0hg==}
+  '@ghostery/adblocker@2.15.0':
+    resolution: {integrity: sha512-t64ecjJOeFyNHbxyYY2r1WA7aMFx8Pf94hXsYVbTKoCIiMjcOl4SlvMQ3obMlvNrj2QLNpByCD9f7Vq+7z45bQ==}
 
   '@ghostery/url-parser@1.3.1':
     resolution: {integrity: sha512-QKqGi+7aDQ4RcyHyCwgEk6B9vWnsBP4Q7htaN0zPJV3ATqTKEQDtSTb9c/AN586oJUDs24YXKcwFYwNweY/YjQ==}
@@ -1145,11 +1145,11 @@ packages:
     peerDependencies:
       eslint: '>=6.0.0'
 
-  eslint-config-sukka@8.10.1:
-    resolution: {integrity: sha512-WpaVicu5s7tc94Z+kT1dINfjrsNhAkoXEgv7IgT0gIEd/X9AY4d4qplwtS4rGds9lwxDRaMjgXOZdfFb7b/6Kg==}
+  eslint-config-sukka@8.10.2:
+    resolution: {integrity: sha512-wXhlcJqoiqUGG4igUE8PNaO7wzNjMRuTAmfhVIXtc6IbAQs5ZhTS2RNO4tRrFyRr2gHlrEqBUaDA7j6pfi5A8Q==}
 
-  eslint-formatter-sukka@8.10.1:
-    resolution: {integrity: sha512-iCuiPI/zwS8Ev1GjVLrL0y1NBbOnC1BfVsoO1axC0u0R0REBqUfBx+pjcDVHWXQb7VFb07uQovwq5tiYr3WLdQ==}
+  eslint-formatter-sukka@8.10.2:
+    resolution: {integrity: sha512-2Is/ViXqqD1k8rbiP5+niqU/EjDLSd3LcRsXZ/UxUtM3c2kEGj0TD1L9mH/EPd60pJHAVnaYfNJzsiTd7rz03w==}
     peerDependencies:
       eslint: '*'
 
@@ -1322,8 +1322,8 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
-  fast-uri@3.1.0:
-    resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
+  fast-uri@3.1.1:
+    resolution: {integrity: sha512-h2r7rcm6Ee/J8o0LD5djLuFVcfbZxhvho4vvsbeV0aMvXjUgqv4YpxpkEx0d68l6+IleVfLAdVEfhR7QNMkGHQ==}
 
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
@@ -2031,11 +2031,11 @@ snapshots:
 
   '@eslint-community/regexpp@4.12.2': {}
 
-  '@eslint-sukka/eslint-plugin-stylistic@8.10.1(eslint@10.3.0)':
+  '@eslint-sukka/eslint-plugin-stylistic@8.10.2(eslint@10.3.0)':
     dependencies:
       eslint: 10.3.0
 
-  '@eslint-sukka/eslint-plugin-sukka-full@8.10.1(eslint@10.3.0)(typescript@6.0.3)':
+  '@eslint-sukka/eslint-plugin-sukka-full@8.10.2(eslint@10.3.0)(typescript@6.0.3)':
     dependencies:
       eslint: 10.3.0
       eslint-plugin-sukka: 9.4.0(eslint@10.3.0)(typescript@6.0.3)
@@ -2044,17 +2044,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint-sukka/node@8.10.1(eslint@10.3.0)(typescript@6.0.3)':
+  '@eslint-sukka/node@8.10.2(eslint@10.3.0)(typescript@6.0.3)':
     dependencies:
-      '@eslint-sukka/eslint-plugin-sukka-full': 8.10.1(eslint@10.3.0)(typescript@6.0.3)
-      '@eslint-sukka/shared': 8.10.1(eslint@10.3.0)(typescript@6.0.3)
+      '@eslint-sukka/eslint-plugin-sukka-full': 8.10.2(eslint@10.3.0)(typescript@6.0.3)
+      '@eslint-sukka/shared': 8.10.2(eslint@10.3.0)(typescript@6.0.3)
       eslint-plugin-n: 17.24.0(eslint@10.3.0)(typescript@6.0.3)
     transitivePeerDependencies:
       - eslint
       - supports-color
       - typescript
 
-  '@eslint-sukka/shared@8.10.1(eslint@10.3.0)(typescript@6.0.3)':
+  '@eslint-sukka/shared@8.10.2(eslint@10.3.0)(typescript@6.0.3)':
     dependencies:
       '@package-json/types': 0.0.13
       '@typescript-eslint/utils': 8.59.1(eslint@10.3.0)(typescript@6.0.3)
@@ -2097,16 +2097,16 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@ghostery/adblocker-content@2.14.4':
+  '@ghostery/adblocker-content@2.15.0':
     dependencies:
-      '@ghostery/adblocker-extended-selectors': 2.14.4
+      '@ghostery/adblocker-extended-selectors': 2.15.0
 
-  '@ghostery/adblocker-extended-selectors@2.14.4': {}
+  '@ghostery/adblocker-extended-selectors@2.15.0': {}
 
-  '@ghostery/adblocker@2.14.4':
+  '@ghostery/adblocker@2.15.0':
     dependencies:
-      '@ghostery/adblocker-content': 2.14.4
-      '@ghostery/adblocker-extended-selectors': 2.14.4
+      '@ghostery/adblocker-content': 2.15.0
+      '@ghostery/adblocker-extended-selectors': 2.15.0
       '@ghostery/url-parser': 1.3.1
       '@remusao/guess-url-type': 2.1.0
       '@remusao/small': 2.1.0
@@ -2883,13 +2883,13 @@ snapshots:
       eslint: 10.3.0
       semver: 7.7.3
 
-  eslint-config-sukka@8.10.1(@typescript-eslint/utils@8.59.1(eslint@10.3.0)(typescript@6.0.3))(eslint@10.3.0)(typescript@6.0.3):
+  eslint-config-sukka@8.10.2(@typescript-eslint/utils@8.59.1(eslint@10.3.0)(typescript@6.0.3))(eslint@10.3.0)(typescript@6.0.3):
     dependencies:
       '@antfu/install-pkg': 1.1.0
       '@eslint-community/eslint-plugin-eslint-comments': 4.7.1(eslint@10.3.0)
-      '@eslint-sukka/eslint-plugin-stylistic': 8.10.1(eslint@10.3.0)
-      '@eslint-sukka/eslint-plugin-sukka-full': 8.10.1(eslint@10.3.0)(typescript@6.0.3)
-      '@eslint-sukka/shared': 8.10.1(eslint@10.3.0)(typescript@6.0.3)
+      '@eslint-sukka/eslint-plugin-stylistic': 8.10.2(eslint@10.3.0)
+      '@eslint-sukka/eslint-plugin-sukka-full': 8.10.2(eslint@10.3.0)(typescript@6.0.3)
+      '@eslint-sukka/shared': 8.10.2(eslint@10.3.0)(typescript@6.0.3)
       '@eslint/config-helpers': 0.5.5
       '@eslint/js': 10.0.1(eslint@10.3.0)
       '@typescript-eslint/eslint-plugin': 8.59.1(@typescript-eslint/parser@8.59.1(eslint@10.3.0)(typescript@6.0.3))(eslint@10.3.0)(typescript@6.0.3)
@@ -2915,7 +2915,7 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-formatter-sukka@8.10.1(eslint@10.3.0):
+  eslint-formatter-sukka@8.10.2(eslint@10.3.0):
     dependencies:
       ci-info: 4.4.0
       eslint: 10.3.0
@@ -3135,7 +3135,7 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
-  fast-uri@3.1.0: {}
+  fast-uri@3.1.1: {}
 
   fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
