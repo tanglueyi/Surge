@@ -27,7 +27,7 @@ if (!fs.existsSync(CACHE_DIR)) {
 }
 
 const agent = new Agent({
-  allowH2: true
+  allowH2: false
 }).compose(
   interceptors.dns({
     // disable IPv6
