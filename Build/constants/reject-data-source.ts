@@ -1,4 +1,5 @@
 export const DEBUG_DOMAIN_TO_FIND: string | null = null; // example.com | null
+// Other useful tools: https://oisd.nl/excludes/[domain] for checking if the domain is included in common block lists
 
 type HostsSource = [main: string, mirrors: string[] | null, includeAllSubDomain: boolean, allowEmptyRemote?: boolean];
 
@@ -9,11 +10,6 @@ export const HOSTS: HostsSource[] = [
   //   ['https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt'],
   //   true
   // ],
-  [
-    'https://cdn.jsdelivr.net/gh/jerryn70/GoodbyeAds@master/Extension/GoodbyeAds-Xiaomi-Extension.txt',
-    ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Xiaomi-Extension.txt'],
-    false
-  ]
 ];
 
 export const HOSTS_EXTRA: HostsSource[] = [
@@ -491,8 +487,6 @@ export const PREDEFINED_WHITELIST = [
   '.sb-cd.com', // AdGuard
   '.storage.yandexcloud.net', // phishing list
   '.login.microsoftonline.com', // phishing list
-  'api.xiaomi.com', // https://github.com/jerryn70/GoodbyeAds/issues/281
-  'api.io.mi.com', // https://github.com/jerryn70/GoodbyeAds/issues/281
   '.cdn.userreport.com', // https://github.com/AdguardTeam/AdGuardSDNSFilter/issues/1158
   '.ip-api.com',
   '.fastly-analytics.com',
@@ -506,9 +500,6 @@ export const PREDEFINED_WHITELIST = [
   '.clicks.mlsend.com', // Fuck Peter Lowe Hosts
   'email.accounts.bitly.com', // Fuck Peter Lowe Hosts
   'adsense.google.com', // Fuck Peter Lowe Hosts
-  'api.vip.miui.com', // Fuck Goodbye Xiaomi Ads
-  'api.comm.miui.com', // Xiaomi MIUI phone number database update URL
-  '.ai.api.xiaomi.com', // Fuck Goodbye Xiaomi Ads
   'm.stripe.com', // EasyPrivacy only blocks m.stripe.com wwith $third-party,
   // yet stupid AdGuardDNSFilter blocks all of it. Stupid AdGuard
   '.w3s.link', // stupid phishing.army, introduce both "*.ipfs.w3s.link" and ".w3s.link" to the block list
