@@ -43,14 +43,6 @@ export const HOSTS_EXTRA: HostsSource[] = [
     'https://cdn.jsdelivr.net/gh/hoshsadiq/adblock-nocoin-list@master/hosts.txt',
     ['https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/hosts.txt'],
     true
-  ],
-  // GoodbyeAds - Samsung AdBlock
-  // most of its content has covered by reject.conf. Remaining domains, some are not even owned by samsung, some are normal API/SSO/DNS
-  // blocking them doesn't make sense, yet will not breaking anything anyway, so we move it to extra
-  [
-    'https://cdn.jsdelivr.net/gh/jerryn70/GoodbyeAds@master/Extension/GoodbyeAds-Samsung-AdBlock.txt',
-    ['https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Extension/GoodbyeAds-Samsung-AdBlock.txt'],
-    false
   ]
 ];
 
