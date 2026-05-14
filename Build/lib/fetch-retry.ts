@@ -57,6 +57,7 @@ const agent = new Agent({
       // Any code that is not a Undici's originated and allowed to retry
       if (
         errorCode === 'ERR_UNESCAPED_CHARACTERS'
+        || errorCode === 'UND_ERR_DESTROYED'
         || err.message === 'Request path contains unescaped characters'
         || err.name === 'AbortError'
       ) {
