@@ -149,18 +149,40 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
         );
 
       domains.forEach((domain) => {
+        const isWildcard = domain.includes('*') || domain.includes('?');
         switch (domain[0]) {
-          case '$':
-            surgeOutput.addDomain(domain.slice(1));
-            mihomoOutput.addDomain(domain.slice(1));
+          case '$': {
+            const d = domain.slice(1);
+            if (isWildcard) {
+              surgeOutput.addDomainWildcard(d);
+              mihomoOutput.addDomainWildcard(d);
+            } else {
+              surgeOutput.addDomain(d);
+              mihomoOutput.addDomain(d);
+            }
             break;
-          case '+':
-            surgeOutput.addDomainSuffix(domain.slice(1));
-            mihomoOutput.addDomainSuffix(domain.slice(1));
+          }
+          case '+': {
+            const d = domain.slice(1);
+            if (isWildcard) {
+              surgeOutput.addDomainWildcard(`*.${d}`);
+              mihomoOutput.addDomainWildcard(`*.${d}`);
+            } else {
+              surgeOutput.addDomainSuffix(d);
+              mihomoOutput.addDomainSuffix(d);
+            }
             break;
+          }
           default:
-            surgeOutput.addDomainSuffix(domain);
-            mihomoOutput.addDomainSuffix(domain);
+            if (isWildcard) {
+              surgeOutput.addDomainWildcard(domain);
+              surgeOutput.addDomainWildcard(`*.${domain}`);
+              mihomoOutput.addDomainWildcard(domain);
+              mihomoOutput.addDomainWildcard(`*.${domain}`);
+            } else {
+              surgeOutput.addDomainSuffix(domain);
+              mihomoOutput.addDomainSuffix(domain);
+            }
             break;
         }
       });
@@ -276,7 +298,7 @@ export const buildDomesticRuleset = task(require.main === module, __filename)(as
                 if (typeof acc.hosts[domain] === 'string') {
                   acc.hosts[domain] = [acc.hosts[domain]];
                 }
-                acc.hosts[domain].push(...dest);
+                appendArrayInPlace(acc.hosts[domain], dest);
               } else if (dest.length === 1) {
                 acc.hosts[domain] = dest[0];
               } else {
