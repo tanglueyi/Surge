@@ -43,7 +43,7 @@
     "tldts": "^7.4.10",
     "tldts-experimental": "^7.4.10",
     "undici": "^8.10.0",
-    "undici-cache-store-better-sqlite3": "^1.1.0",
+    "undici-cache-store-better-sqlite3": "^1.1.1",
     "why-is-node-running": "^3.2.2",
     "xbits": "^0.2.0",
     "yaml": "^2.9.0",
@@ -52,7 +52,7 @@
   "devDependencies": {
     "@eslint-sukka/node": "^9.0.1",
     "@swc-node/register": "^1.12.1",
-    "@swc/core": "1.15.47",
+    "@swc/core": "1.16.1",
     "@types/cli-progress": "^3.11.6",
     "@types/mocha": "^10.0.10",
     "@types/node": "^26.2.0",
@@ -68,5 +68,5 @@
     "mocha": "^11.8.0",
     "typescript": "^6.0.3"
   },
-  "packageManager": "pnpm@11.20.0"
+  "packageManager": "pnpm@11.22.0"
 }
